@@ -809,13 +809,17 @@ union find disjoint set is used in Kruskal's minimum spanning tree algorithm and
 
 ### Heap - using 1D array
 
-A heap is a special binary tree that is used to efficiently maintain a partially ordered set. Heaps are often used to implement priority queues, which are data structures that allow efficient access to the element with the highest priority.
+A heap is a special binary tree that has heap order (parent is not less than children by default).
 
-Heaps are typically implemented as binary trees, where each node has at most two children. There are two main types of heaps: max heaps and min heaps. In a max heap, the value of each node is greater than or equal to the values of its children, and the maximum value is stored at the root of the tree. In a min heap, the value of each node is less than or equal to the values of its children, and the minimum value is stored at the root of the tree.
+.There are two main types of heaps: max heaps and min heaps. In a max heap, the value of each node is greater than or equal to the values of its children, and the maximum value is stored at the root of the tree. In a min heap, the value of each node is less than or equal to the values of its children, and the minimum value is stored at the root of the tree.
+
+Heaps are typically implemented as binary trees, where each node has at most two children.&#x20;
+
+Heap is used to efficiently maintain a partially ordered set. Heaps are often used to implement priority queues, which are data structures that allow efficient access to the element with the highest priority
 
 ```cpp
 
-//Self made heap and NOT STL heap!
+//Self made min-heap and NOT STL heap!
 supports actions 
 a) insert a number; 
 b) find minimum of set; 
@@ -826,7 +830,7 @@ e) modify k-th inserted element
 
 heap is a complete/full binary tree except the last level; 
 last level is from left right;
-min heap = root is less than both left and right son node; 
+we will build a min heap here = root is less than both left and right son node; 
 so root of tree is minimum in min-heap
 
     STL heap is just priority queue; here heap is implemented using 1D array
