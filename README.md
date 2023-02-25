@@ -1601,7 +1601,7 @@ bool is_prime(int x)
     return true;
 }
 //trial division method for factoring 试除法分解质因数 —— 模板题 AcWing 867. 分解质因数
-void divide(int x)
+void factori(int x)
 {
     for (int i = 2; i <= x / i; i ++ )
         if (x % i == 0)
