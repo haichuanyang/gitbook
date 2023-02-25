@@ -835,8 +835,9 @@ so root of tree is minimum in min-heap
     // h[N] store values of the heap, h[1] is heap top
     // h[x] left son is h[2x], right son is h[2x+1]
     // ph[k] stores the heap position of the the k-th inserted node
-    // hp[k] stores the insert number of h[k]
-	// hp[k]存储堆中下标是k的点是第几个插入的
+    // hp[k] stores the insert number of h[k], the value of its rank of insertion
+// hp[k] is for the k-index point and keeps the order of when it's inserted
+	//存储堆中下标是k的点是第几个插入的
 	int h[N], ph[N], hp[N], size;
 
 	// swap 2 nodes as well as their associated mappings 
@@ -849,9 +850,10 @@ so root of tree is minimum in min-heap
 
 	void down(int u)
 	{
-		int t = u;
-		if (u * 2 <= size && h[u * 2] < h[t]) t = u * 2;
-		if (u * 2 + 1 <= size && h[u * 2 + 1] < h[t]) t = u * 2 + 1;
+	//check if u is the smallest of the 3 nodes; if not, down it
+		int t = u; 
+		if (u * 2 <= size && h[u * 2] < h[t]) t = u * 2; //left child
+		if (u * 2 + 1 <= size && h[u * 2 + 1] < h[t]) t = u * 2 + 1; //right child
 		if (u != t)
 		{
 			heap_swap(u, t);
@@ -861,7 +863,7 @@ so root of tree is minimum in min-heap
 
 	void up(int u)
 	{
-		while (u / 2 && h[u] < h[u / 2])
+		while (u / 2 && h[u] < h[u / 2]) //compare u with parent
 		{
 			heap_swap(u, u / 2);
 			u >>= 1;
