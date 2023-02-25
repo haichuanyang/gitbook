@@ -809,7 +809,7 @@ union find disjoint set is used in Kruskal's minimum spanning tree algorithm and
 
 ### Heap - using 1D array
 
-A heap is a specialized tree-based data structure that is used to efficiently maintain a partially ordered set. Heaps are often used to implement priority queues, which are data structures that allow efficient access to the element with the highest priority.
+A heap is a special binary tree that is used to efficiently maintain a partially ordered set. Heaps are often used to implement priority queues, which are data structures that allow efficient access to the element with the highest priority.
 
 Heaps are typically implemented as binary trees, where each node has at most two children. There are two main types of heaps: max heaps and min heaps. In a max heap, the value of each node is greater than or equal to the values of its children, and the maximum value is stored at the root of the tree. In a min heap, the value of each node is less than or equal to the values of its children, and the minimum value is stored at the root of the tree.
 
@@ -873,7 +873,7 @@ so root of tree is minimum in min-heap
 	// O(n) heap building
 	for (int i = n / 2; i; i -- ) down(i);
 
-heap actions:- dijkstra use
+heap actions:- dijkstra will use
 
 a) insert a number x: heap[++size]=x; up(size);
 b) find minimum: heap[1];
