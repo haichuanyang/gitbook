@@ -1,0 +1,5568 @@
+# cp3 book code
+
+### bitset
+
+```cpp
+// note: for example usage of bitset, see ch5/primes.cpp
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define isOn(S, j) (S & (1<<j))
+#define setBit(S, j) (S |= (1<<j))
+#define clearBit(S, j) (S &= ~(1<<j))
+#define toggleBit(S, j) (S ^= (1<<j))
+#define lowBit(S) (S & (-S))
+#define setAll(S, n) (S = (1<<n)-1)
+
+#define modulo(S, N) ((S) & (N-1))   // returns S % N, where N is a power of 2
+#define isPowerOfTwo(S) (!(S & (S-1)))
+#define nearestPowerOfTwo(S) ((int)pow(2.0, (int)((log((double)S) / log(2.0)) + 0.5)))
+#define turnOffLastBit(S) ((S) & (S-1))
+#define turnOnLastZero(S) ((S) | (S+1))
+#define turnOffLastConsecutiveBits(S) ((S) & (S+1))
+#define turnOnLastConsecutiveZeroes(S) ((S) | (S-1))
+
+void printSet(int vS) {                         // in binary representation
+  printf("S = %2d = ", vS);
+  stack<int> st;
+  while (vS)
+    st.push(vS%2), vS /= 2;
+  while (!st.empty())                         // to reverse the print order
+    printf("%d", st.top()), st.pop();
+  printf("\n");
+}
+
+int main() {
+  int S, T;
+
+  printf("1. Representation (all indexing are 0-based and counted from right)\n");
+  S = 34; printSet(S);
+  printf("\n");
+
+  printf("2. Multiply S by 2, then divide S by 4 (2x2), then by 2\n");
+  S = 34; printSet(S);
+  S = S << 1; printSet(S);
+  S = S >> 2; printSet(S);
+  S = S >> 1; printSet(S);
+  printf("\n");
+
+  printf("3. Set/turn on the 3-rd item of the set\n");
+  S = 34; printSet(S);
+  setBit(S, 3); printSet(S);
+  printf("\n");
+
+  printf("4. Check if the 3-rd and then 2-nd item of the set is on?\n");
+  S = 42; printSet(S);
+  T = isOn(S, 3); printf("T = %d, %s\n", T, T ? "ON" : "OFF");
+  T = isOn(S, 2); printf("T = %d, %s\n", T, T ? "ON" : "OFF");
+  printf("\n");
+
+  printf("5. Clear/turn off the 1-st item of the set\n");
+  S = 42; printSet(S);
+  clearBit(S, 1); printSet(S);
+  printf("\n");
+
+  printf("6. Toggle the 2-nd item and then 3-rd item of the set\n");
+  S = 40; printSet(S);
+  toggleBit(S, 2); printSet(S);
+  toggleBit(S, 3); printSet(S);
+  printf("\n");
+
+  printf("7. Check the first bit from right that is on\n");
+  S = 40; printSet(S);
+  T = lowBit(S); printf("T = %d (this is always a power of 2)\n", T);
+  S = 52; printSet(S);
+  T = lowBit(S); printf("T = %d (this is always a power of 2)\n", T);
+  printf("\n");
+
+  printf("8. Turn on all bits in a set of size n = 6\n");
+  setAll(S, 6); printSet(S);
+  printf("\n");
+
+  printf("9. Other tricks (not shown in the book)\n");
+  printf("8 %c 4 = %d\n", '%', modulo(8, 4));
+  printf("7 %c 4 = %d\n", '%', modulo(7, 4));
+  printf("6 %c 4 = %d\n", '%', modulo(6, 4));
+  printf("5 %c 4 = %d\n", '%', modulo(5, 4));
+  printf("is %d power of two? %d\n", 9, isPowerOfTwo(9));
+  printf("is %d power of two? %d\n", 8, isPowerOfTwo(8));
+  printf("is %d power of two? %d\n", 7, isPowerOfTwo(7));
+  for (int i = 1; i <= 16; i++)
+    printf("Nearest power of two of %d is %d\n", i, nearestPowerOfTwo(i)); // special case for i == 0
+  printf("S = %d, turn off last bit in S, S = %d\n", 40, turnOffLastBit(40));
+  printf("S = %d, turn on last zero in S, S = %d\n", 41, turnOnLastZero(41));
+  printf("S = %d, turn off last consecutive bits in S, S = %d\n", 39, turnOffLastConsecutiveBits(39));
+  printf("S = %d, turn on last consecutive zeroes in S, S = %d\n", 36, turnOnLastConsecutiveZeroes(36));
+
+  return 0;
+}
+```
+
+### primes
+
+```cpp
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef vector<int> vi;
+typedef vector<ll> vll;
+typedef map<int, int> mii;
+
+ll _sieve_size;
+bitset<10000010> bs;                     // 10^7 should be enough for most cases
+vll primes;               // compact list of primes in form of vector<long long>
+
+
+// first part
+
+void sieve(ll upperbound) {          // create list of primes in [0..upperbound]
+  _sieve_size = upperbound+1;                     // add 1 to include upperbound
+  bs.set();                                                 // set all bits to 1
+  bs[0] = bs[1] = 0;                                     // except index 0 and 1
+  for (ll i = 2; i < _sieve_size; i++) if (bs[i]) {
+    // cross out multiples of i <= _sieve_size starting from i*i
+    for (ll j = i*i; j < _sieve_size; j += i) bs[j] = 0;
+    primes.push_back(i);       // also add this vector containing list of primes
+} }                                           // call this method in main method
+
+bool isPrime(ll N) {                 // a good enough deterministic prime tester
+  if (N < _sieve_size) return bs[N];                // now O(1) for small primes
+  for (int i = 0; (i < primes.size()) && (primes[i]*primes[i] <= N); i++)
+    if (N%primes[i] == 0) return false;
+  return true;                    // it takes longer time if N is a large prime!
+}                      // note: only work for N <= (last prime in vi "primes")^2
+
+// second part
+
+vi primeFactors(ll N) {   // remember: vi is vector of integers, ll is long long
+  vi factors;                    // vi `primes' (generated by sieve) is optional
+  ll PF_idx = 0, PF = primes[PF_idx];     // using PF = 2, 3, 4, ..., is also ok
+  while ((N != 1) && (PF*PF <= N)) {   // stop at sqrt(N), but N can get smaller
+    while (N%PF == 0) { N /= PF; factors.push_back(PF); }      // remove this PF
+    PF = primes[++PF_idx];                              // only consider primes!
+  }
+  if (N != 1) factors.push_back(N);     // special case if N is actually a prime
+  return factors;         // if pf exceeds 32-bit integer, you have to change vi
+}
+
+// third part
+
+ll numPF(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 0;
+  while (N != 1 && (PF*PF <= N)) {
+    while (N%PF == 0) { N /= PF; ans++; }
+    PF = primes[++PF_idx];
+  }
+  return ans + (N != 1);
+}
+
+ll numDiffPF(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 0;
+  while (N != 1 && (PF*PF <= N)) {
+    if (N%PF == 0) ans++;                             // count this pf only once
+    while (N%PF == 0) N /= PF;
+    PF = primes[++PF_idx];
+  }
+  return ans + (N != 1);
+}
+
+ll sumPF(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 0;
+  while (N != 1 && (PF*PF <= N)) {
+    while (N%PF == 0) { N /= PF; ans += PF; }
+    PF = primes[++PF_idx];
+  }
+  return ans + (N != 1) * N;
+}
+
+ll numDiv(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 1;             // start from ans = 1
+  while (N != 1 && (PF*PF <= N)) {
+    ll power = 0;                                             // count the power
+    while (N%PF == 0) { N /= PF; power++; }
+    ans *= (power+1);                                // according to the formula
+    PF = primes[++PF_idx];
+  }
+  return (N != 1) ? 2*ans : ans;    // (last factor has pow = 1, we add 1 to it)
+}
+
+ll sumDiv(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 1;             // start from ans = 1
+  while (N != 1 && (PF*PF <= N)) {
+    ll power = 0;
+    while (N%PF == 0) { N /= PF; power++; }
+    ans *= ((ll)pow((double)PF, power+1.0) - 1) / (PF-1);             // formula
+    PF = primes[++PF_idx];
+  }
+  if (N != 1) ans *= ((ll)pow((double)N, 2.0) - 1) / (N-1);          // last one
+  return ans;
+}
+
+ll EulerPhi(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = N;             // start from ans = N
+  while (N != 1 && (PF * PF <= N)) {
+    if (N % PF == 0) ans -= ans / PF;                // only count unique factor
+    while (N % PF == 0) N /= PF;
+    PF = primes[++PF_idx];
+  }
+  return (N != 1) ? ans - ans/N : ans;                            // last factor
+}
+
+int main() {
+  // first part: the Sieve of Eratosthenes
+  sieve(10000000);                       // can go up to 10^7 (need few seconds)
+  printf("%lld\n", primes.back());            // last prime generated is 9999991
+  for (int i = 10000001; ; i++)
+    if (isPrime(i)) {
+      printf("The next prime beyond the last prime generated is %d\n", i);
+      break;
+    }
+  printf("%d\n", isPrime((1LL<<31)-1));  // 2^31-1 = 2147483647, 10-digits prime
+  printf("%d\n", isPrime(136117223861LL));        // not a prime, 104729*1299709
+
+
+  // second part: prime factors
+  vi r = primeFactors((1LL<<31)-1);   // slowest, 2^31-1 = 2147483647 is a prime
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  r = primeFactors(136117223861LL);    // slow, 2 large factors 104729 * 1299709
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  r = primeFactors(142391208960LL);    // faster, 2^10 * 3^4 * 5 * 7^4 * 11 * 13
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  r = primeFactors(99999820000081LL);             // this is the limit: 9999991^2
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  // r = primeFactors(100000380000361LL);                 // error, beyond 9999991^2
+  // for (auto &pf : r) printf("> %d\n", pf);
+  // printf("\n");
+  
+  // third part: prime factors variants
+  printf("numPF(%d) = %lld\n", 50, numPF(50)); // 2^1 * 5^2 => 3
+  printf("numDiffPF(%d) = %lld\n", 50, numDiffPF(50)); // 2^1 * 5^2 => 2
+  printf("sumPF(%d) = %lld\n", 50, sumPF(50)); // 2^1 * 5^2 => 2 + 5 + 5 = 12
+  printf("numDiv(%d) = %lld\n", 50, numDiv(50)); // 1, 2, 5, 10, 25, 50, 6 divisors
+  printf("sumDiv(%d) = %lld\n", 50, sumDiv(50)); // 1 + 2 + 5 + 10 + 25 + 50 = 93
+  printf("EulerPhi(%d) = %lld\n", 50, EulerPhi(50)); // 20 integers < 50 are relatively prime with 50
+  printf("\n");
+
+  // special cases when N is a prime number
+  printf("numPF(%d) = %lld\n", 7, numPF(7)); // 7^1 => 1
+  printf("numDiffPF(%d) = %lld\n", 7, numDiffPF(7)); // 7^1 = 1
+  printf("sumPF(%d) = %lld\n", 7, sumPF(7)); // 7^1 => 7
+  printf("numDiv(%d) = %lld\n", 7, numDiv(7)); // 1 and 7, 2 divisors
+  printf("sumDiv(%d) = %lld\n", 7, sumDiv(7)); // 1 + 7 = 8
+  printf("EulerPhi(%d) = %lld\n", 7, EulerPhi(7)); // 6 integers < 7 are relatively prime with prime number 7
+
+  return 0;
+}
+```
+
+### chap 1
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  // comment all lines and only uncomment demo code that you are interested with
+  
+  freopen("IO_in1.txt", "r", stdin);
+  int TC;
+  scanf("%d", &TC); // number of test cases
+  while (TC--) { // shortcut to repeat until 0
+    int a, b; scanf("%d %d", &a, &b);
+    printf("%d\n", a+b); // compute on the fly
+  }
+
+  // freopen("IO_in2.txt", "r", stdin);
+  // int a, b;
+  // // stop when both integers are 0
+  // while (scanf("%d %d", &a, &b), (a || b))
+  //   printf("%d\n", a+b);
+
+  // freopen("IO_in3.txt", "r", stdin);
+  // int a, b;
+  // // scanf returns the number of items read
+  // while (scanf("%d %d", &a, &b) == 2)
+  // // or you can check for EOF, i.e.
+  // // while (scanf("%d %d", &a, &b) != EOF)
+  //   printf("%d\n", a+b);
+
+  // freopen("IO_in3.txt", "r", stdin); // same input file as before
+  // int a, b, c = 0;
+  // while (scanf("%d %d", &a, &b) != EOF)
+  //   // notice the two '\n'
+  //   printf("Case %d: %d\n\n", ++c, a+b);
+
+  // freopen("IO_in3.txt", "r", stdin); // same input file as before
+  // int a, b, c = 0;
+  // while (scanf("%d %d", &a, &b) != EOF) {
+  //   if (c > 0) printf("\n"); // 2nd/more cases
+  //   printf("Case %d: %d\n", ++c, a+b);
+  // }
+
+  // freopen("IO_in4.txt", "r", stdin);
+  // int k;
+  // while (scanf("%d", &k) != EOF) {
+  //   int ans = 0, v;
+  //   while (k--) { scanf("%d", &v); ans += v; }
+  //   printf("%d\n", ans);
+  // }
+
+  // freopen("IO_in5.txt", "r", stdin);
+  // while (1) { // keep looping
+  //   int ans = 0, v;
+  //   char dummy;
+  //   while (scanf("%d%c", &v, &dummy) != EOF) {
+  //     ans += v;
+  //     if (dummy == '\n') break; // test EOLN
+  //   }
+  //   if (feof(stdin)) break; // test EOF
+  //   printf("%d\n", ans);
+  // }
+
+  return 0;
+}
+/*          Forming Quiz Teams, the solution for UVa 10911 above         */
+#include <bits/stdc++.h> // not C++ standard, but OK in programming contest
+using namespace std;
+
+#define LSOne(S) ((S) & -(S))                    // important speedup
+
+int N;                                           // max N = 8
+double dist[20][20], memo[1<<16];                // 1<<16 = 2^16
+
+double dp(int mask) {                            // DP state = mask
+  double &ans = memo[mask];                      // reference/alias
+  if (ans > -0.5) return ans;                    // this has been computed
+  if (mask == 0) return 0;                       // all have been matched
+  ans = 1e9;                                     // init with a large value
+  int two_pow_p1 = LSOne(mask);                  // speedup
+  int p1 = __builtin_ctz(two_pow_p1);            // p1 is first on bit
+  int m = mask-two_pow_p1;                       // turn off bit p1
+  while (m) {
+    int two_pow_p2 = LSOne(m);                   // then, try to match p1
+    int p2 = __builtin_ctz(two_pow_p2);          // with another on bit p2
+    ans = min(ans, dist[p1][p2] + dp(mask^two_pow_p1^two_pow_p2));
+    m -= two_pow_p2;                             // turn off bit p2
+  }
+  return ans;                                    // memo[mask] == ans
+}
+
+int main() {
+  int caseNo = 0, x[20], y[20];
+  while (scanf("%d", &N), N) {                   // yes, we can do this :)
+    for (int i = 0; i < 2*N; ++i)
+      scanf("%*s %d %d", &x[i], &y[i]);          // `%*s' skips names
+    for (int i = 0; i < 2*N-1; ++i)              // build distance table
+      for (int j = i+1; j < 2*N; ++j)            // use `hypot' function
+        dist[i][j] = dist[j][i] = hypot(x[i]-x[j], y[i]-y[j]);
+    for (int i = 0; i < (1<<16); ++i) memo[i] = -1.0;
+    printf("Case %d: %.2lf\n", ++caseNo, dp((1<<(2*N)) - 1));
+  }
+  return 0;
+} // DP to solve min weighted perfect matching on small general graph
+#include <bits/stdc++.h>                         // a good practice in CP
+using namespace std;                             // same as above
+int main() {
+  int a, b, c, n; scanf("%d %d %d %d", &a, &b, &c, &n); // bug fix below
+  printf(((a >= 1) && (b >= 1) && (c >= 1) && (a+b+c >= n) && (n >= 3)) ?
+         "YES\n" : "NO\n");                      // use ternary operator
+  return 0;                                      // for shorter code
+}
+#include <bits/stdc++.h>                         // include all
+using namespace std;
+int main() {
+  int N; scanf("%d\n", &N);
+  while (N--) {                                  // loop from N,N-1,...,0
+    char x[110];                                 // set size a bit larger
+    scanf("0.%[0-9]...\n", &x);                  // `&' is optional here
+    // note: if you are surprised with the technique above,
+    // please check scanf details in www.cppreference.com
+    printf("the digits are 0.%s\n", x);
+  }
+  return 0;
+}
+#include <bits/stdc++.h>                         // C++ code for task 2
+int main() {
+  int n; scanf("%d", &n);
+  printf("%.*lf\n", n, M_PI);                    // adjust field width
+}
+#include <bits/stdc++.h>                         // C++ code for task 4
+using namespace std;
+#define ALL(x) x.begin(), x.end()
+#define UNIQUE(c) (c).resize(unique(ALL(c)) - (c).begin())
+int main() {
+  vector<int> v = {1, 2, 2, 2, 3, 3, 2, 2, 1};
+  sort(ALL(v)); UNIQUE(v);
+  for (auto &x : v) printf("%d\n", x);
+}
+#include <bits/stdc++.h>                         // C++ code for task 5
+using namespace std;
+typedef tuple<int, int, int> iii;                // use natural order
+int main() {
+  vector<iii> birthdays;
+  birthdays.emplace_back(5, 24, -1980);          // reorder DD/MM/YYYY
+  birthdays.emplace_back(5, 24, -1982);          // to MM, DD, and then
+  birthdays.emplace_back(11, 13, -1983);         // use NEGATIVE YYYY
+  sort(birthdays.begin(), birthdays.end());      // that's all :)
+  for (auto &[mm, dd, yyyy] : birthdays)         // C++17 style
+    printf("%d %d %d\n", dd, mm, -yyyy);
+}
+#include <bits/stdc++.h>                         // C++ code for task 6
+using namespace std;
+int main() {
+  int n = 5, L[] = {10, 7, 5, 20, 8}, v = 7;
+  sort(L, L+n);
+  printf("%d\n", binary_search(L, L+n, v));      // should be index 1
+}
+#include <bits/stdc++.h>                         // C++ code for task 7
+using namespace std;
+int main() {
+  int p[10], N = 10;
+  for (int i = 0; i < N; ++i) p[i] = i;
+  do {
+    for (int i = 0; i < N; ++i) printf("%c ", 'A'+p[i]);
+    printf("\n");
+  }
+  while (next_permutation(p, p+N));
+}
+#include <bits/stdc++.h>                         // C++ code for task 8
+using namespace std;
+#define LSOne(S) ((S) & -(S))                    // notice the brackets
+int main() {
+  int N = 20;
+  for (int i = 0; i < (1<<N); ++i) {
+    int pos = i;
+    while (pos) {
+      int ls = LSOne(pos);
+      printf("%d ", __builtin_ctz(ls));          // this idx is part of set
+      pos -= ls;
+    }
+    printf("\n");
+  }
+}
+
+```
+
+### chap 2
+
+```cpp
+#include <bits/stdc++.h>
+using namespace std;
+
+#define LSOne(S) ((S) & -(S))                    // the key operation
+
+typedef long long ll;                            // for extra flexibility
+typedef vector<ll> vll;
+typedef vector<int> vi;
+
+class FenwickTree {                              // index 0 is not used
+private:
+  vll ft;                                        // internal FT is an array
+public:
+  FenwickTree(int n) { ft.assign(n+1, 0); }      // create an empty FT
+
+  void build(const vll &f) {
+    int n = (int)f.size()-1;                     // note f[0] is always 0
+    ft.assign(n+1, 0);
+    for (int i = 1; i <= n; ++i) {               // O(n)
+      ft[i] += f[i];                             // add this value
+      if (i+LSOne(i) <= n)                       // i has parent
+        ft[i+LSOne(i)] += ft[i];                 // add to that parent
+    }
+  }
+
+  FenwickTree(const vll &f) { build(f); }        // create FT based on f
+
+  FenwickTree(int n, const vi &s) {              // create FT based on s
+    vll f(n+1, 0);
+    for (int i = 0; i < (int)s.size(); ++i)      // do the conversion first
+      ++f[s[i]];
+    build(f);
+  }
+
+  ll rsq(int j) {                                // returns RSQ(1, j)
+    ll sum = 0;
+    for (; j; j -= LSOne(j))
+      sum += ft[j];
+    return sum;
+  }
+
+  ll rsq(int i, int j) { return rsq(j) - rsq(i-1); } // inc/exclusion
+
+  // updates value of the i-th element by v (v can be +ve/inc or -ve/dec)
+  void update(int i, ll v) {
+    for (; i < (int)ft.size(); i += LSOne(i))
+      ft[i] += v;
+  }
+
+  int select(ll k) {                             // O(log^2 n)
+    int lo = 1, hi = ft.size()-1;
+    for (int i = 0; i < 30; ++i) {               // 2^30 > 10^9; usually ok
+      int mid = (lo+hi) / 2;                     // BSTA
+      (rsq(1, mid) < k) ? lo = mid : hi = mid;   // See Section 3.3.1
+    }
+    return hi;
+  }
+};
+
+class RUPQ {                                     // RUPQ variant
+private:
+  FenwickTree ft;                                // internally use PURQ FT
+public:
+  RUPQ(int n) : ft(FenwickTree(n)) {}
+  void range_update(int ui, int uj, int v) {
+    ft.update(ui, v);                            // [ui, ui+1, .., n] +v
+    ft.update(uj+1, -v);                         // [uj+1, uj+2, .., n] -v
+  }                                              // [ui, ui+1, .., uj] +v
+  ll point_query(int i) { return ft.rsq(i); }    // rsq(i) is sufficient
+};
+
+class RURQ  {                                    // RURQ variant
+private:                                         // needs two helper FTs
+  RUPQ rupq;                                     // one RUPQ and
+  FenwickTree purq;                              // one PURQ
+public:
+  RURQ(int n) : rupq(RUPQ(n)), purq(FenwickTree(n)) {} // initialization
+  void range_update(int ui, int uj, int v) {
+    rupq.range_update(ui, uj, v);                // [ui, ui+1, .., uj] +v
+    purq.update(ui, v*(ui-1));                   // -(ui-1)*v before ui
+    purq.update(uj+1, -v*uj);                    // +(uj-ui+1)*v after uj
+  }
+  ll rsq(int j) {
+    return rupq.point_query(j)*j -               // optimistic calculation
+           purq.rsq(j);                          // cancelation factor
+  }
+  ll rsq(int i, int j) { return rsq(j) - rsq(i-1); } // standard
+};
+
+int main() {
+  vll f = {0,0,1,0,1,2,3,2,1,1,0};               // index 0 is always 0
+  FenwickTree ft(f);
+  printf("%lld\n", ft.rsq(1, 6)); // 7 => ft[6]+ft[4] = 5+2 = 7
+  printf("%d\n", ft.select(7)); // index 6, rsq(1, 6) == 7, which is >= 7
+  ft.update(5, 1); // update demo
+  printf("%lld\n", ft.rsq(1, 10)); // now 12
+  printf("=====\n");
+  RUPQ rupq(10); RURQ rurq(10);
+  rupq.range_update(2, 9, 7); // indices in [2, 3, .., 9] updated by +7
+  rurq.range_update(2, 9, 7);
+  rupq.range_update(6, 7, 3); // indices 6&7 are further updated by +3 (10)
+  rurq.range_update(6, 7, 3);
+  for (int i = 1; i <= 10; i++)
+    printf("%d -> %lld\n", i, rupq.point_query(i));
+  printf("RSQ(1, 10) = %lld\n", rurq.rsq(1, 10)); // 62
+  printf("RSQ(6, 7) = %lld\n", rurq.rsq(6, 7)); // 20
+  return 0;
+}
+
+/*
+int main() {
+  printf("Manual Fenwick Tree construction\n");
+                           // idx   0 1 2 3 4 5 6 7  8 9 10, no index 0!
+  FenwickTree ft1(10);     // ft = {-,0,0,0,0,0,0,0, 0,0,0}
+  ft1.update(2, 1);        // ft = {-,0,1,0,1,0,0,0, 1,0,0}, idx 2,4,8 => +1
+  ft1.update(4, 1);        // ft = {-,0,1,0,2,0,0,0, 2,0,0}, idx 4,8 => +1
+  ft1.update(5, 2);        // ft = {-,0,1,0,2,2,2,0, 4,0,0}, idx 5,6,8 => +2
+  ft1.update(6, 3);        // ft = {-,0,1,0,2,2,5,0, 7,0,0}, idx 6,8 => +3
+  ft1.update(7, 2);        // ft = {-,0,1,0,2,2,5,2, 9,0,0}, idx 7,8 => +2
+  ft1.update(8, 1);        // ft = {-,0,1,0,2,2,5,2,10,0,0}, idx 8 => +1
+  ft1.update(9, 1);        // ft = {-,0,1,0,2,2,5,2,10,1,1}, idx 9,10 => +1
+  printf("%lld\n", ft1.rsq(1, 1));  // 0 => ft[1] = 0
+  printf("%lld\n", ft1.rsq(1, 2));  // 1 => ft[2] = 1
+  printf("%lld\n", ft1.rsq(1, 6));  // 7 => ft[6]+ft[4] = 5+2 = 7
+  printf("%lld\n", ft1.rsq(1, 10)); // 11 => ft[10]+ft[8] = 1+10 = 11
+  printf("%lld\n", ft1.rsq(3, 6));  // 6 => rsq(1, 6) - rsq(1, 2) = 7-1 = 6
+  printf("%d\n", ft1.select(7));  // index 6, rsq(1, 6) == 7, which is >= 7
+  printf("%d\n", ft1.select(8));  // index 7, rsq(1, 7) == 9, which is >= 8
+  ft1.update(5, 2); // update demo
+  printf("%lld\n", ft1.rsq(1, 10)); // now 13
+
+  printf("=====\n");
+
+  printf("Fenwick Tree construction using raw data\n");
+  vi s = {2,4,5,6,5,6,8,6,7,9,7};
+  FenwickTree ft2(10, s); // identical as ft1
+  printf("%lld\n", ft2.rsq(1, 1));  // 0 => ft[1] = 0
+  printf("%lld\n", ft2.rsq(1, 2));  // 1 => ft[2] = 1
+  printf("%lld\n", ft2.rsq(1, 6));  // 7 => ft[6]+ft[4] = 5+2 = 7
+  printf("%lld\n", ft2.rsq(1, 10)); // 11 => ft[10]+ft[8] = 1+10 = 11
+  printf("%lld\n", ft2.rsq(3, 6));  // 6 => rsq(1, 6) - rsq(1, 2) = 7-1 = 6
+  printf("%d\n", ft2.select(7));  // index 6, rsq(1, 6) == 7, which is >= 7
+  printf("%d\n", ft2.select(8));  // index 7, rsq(1, 7) == 9, which is >= 8
+  ft2.update(5, 2); // update demo
+  printf("%lld\n", ft2.rsq(1, 10)); // now 13
+
+  printf("=====\n");
+
+  printf("Fenwick Tree construction using frequency data\n");
+  vll f = {0,0,1,0,1,2,3,2,1,1,0};  // index 0 is always 0 (unused)
+  FenwickTree ft3(f);
+  printf("%lld\n", ft3.rsq(1, 1));  // 0 => ft[1] = 0
+  printf("%lld\n", ft3.rsq(1, 2));  // 1 => ft[2] = 1
+  printf("%lld\n", ft3.rsq(1, 6));  // 7 => ft[6]+ft[4] = 5+2 = 7
+  printf("%lld\n", ft3.rsq(1, 10)); // 11 => ft[10]+ft[8] = 1+10 = 11
+  printf("%lld\n", ft3.rsq(3, 6));  // 6 => rsq(1, 6) - rsq(1, 2) = 7-1 = 6
+  printf("%d\n", ft3.select(7));  // index 6, rsq(1, 6) == 7, which is >= 7
+  printf("%d\n", ft3.select(8));  // index 7, rsq(1, 7) == 9, which is >= 8
+  ft3.update(5, 2); // update demo
+  printf("%lld\n", ft3.rsq(1, 10)); // now 13
+  printf("=====\n");
+  RUPQ rupq(10); RURQ rurq(10);
+  rupq.range_update(2, 9, 7); // indices in [2, 3, .., 9] updated by +7
+  rurq.range_update(2, 9, 7);
+  rupq.range_update(6, 7, 3); // indices 6&7 are further updated by +3 (10)
+  rurq.range_update(6, 7, 3);
+  for (int i = 1; i <= 10; i++)
+    printf("%d -> %lld\n", i, rupq.point_query(i));
+  printf("RSQ(1, 10) = %lld\n", rurq.rsq(1, 10)); // 62
+  printf("RSQ(6, 7) = %lld\n", rurq.rsq(6, 7)); // 20
+
+
+  // RUPQ rupq(10) ;                        // empty Fenwick Tree with 10 keys
+  // rupq.range_update(2, 9, 7);     // indices in [2, 3, .., 9] updated by +7
+  // rupq.range_update(6, 7, 3); // indices 6&7 are further updated by +3 (10)
+  // for (int i = 1; i <= 10; i++)
+  //   printf("%d -> %lld\n", i, rupq.point_query(i));
+
+  // printf("=====\n");
+
+  // RURQ rurq(10);
+  // rurq.range_update(2, 2, 1);
+  // rurq.range_update(4, 9, 1);
+  // rurq.range_update(5, 7, 1);
+  // rurq.range_update(6, 6, 1);
+  // for (int i = 1; i <= 10; i++)
+  //   printf("%d -> %lld\n", i, rurq.rsq(i));
+  // printf("RSQ(6, 10) = %lld\n", rurq.rsq(6, 10)); // 3+2+1+1+0 = 7
+  // printf("RSQ(1, 10) = %lld\n", rurq.rsq(1, 10)); // m = 11
+
+  return 0;
+}
+*/
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_V = 1010;
+
+typedef pair<int, int> ii;
+typedef vector<ii> vii;
+typedef tuple<int, int, int> iii;
+
+int AM[MAX_V][MAX_V]; // it is better to declare large (2D) array as global
+
+int main() {
+  // Try this input for Adjacency Matrix/Adjacency List/Edge List
+  // Adjacency Matrix AM
+  //   for each line: |V| entries, 0 or the weight
+  // Adjacency List AL
+  //   for each line: num neighbors, list of neighbors + weight pairs
+  // Edge List EL
+  //   for each line: a-b of edge(a,b) and weight
+  /*
+  6
+    0  10   0   0 100   0
+   10   0   7   0   8   0
+    0   7   0   9   0   0
+    0   0   9   0  20   5
+  100   8   0  20   0   0
+    0   0   0   5   0   0
+  6
+  2 2 10 5 100
+  3 1 10 3 7 5 8
+  2 2 7 4 9
+  3 3 9 5 20 6 5
+  3 1 100 2 8 4 20
+  1 4 5
+  7
+  1 2 10
+  1 5 100
+  2 3 7
+  2 5 8
+  3 4 9
+  4 5 20
+  4 6 5
+  */
+  freopen("graph_ds.txt", "r", stdin);
+
+  int V; scanf("%d", &V);                        // need to know V first
+  for (int u = 0; u < V; ++u)                    // if V is > 2000,
+    for (int v = 0; v < V; ++v)                  // try NOT to use AM
+      scanf("%d", &AM[u][v]);
+
+  printf("Neighbors of vertex 0:\n");
+  for (int v = 0; v < V; ++v)                    // O(V)
+    if (AM[0][v])
+      printf("Edge 0-%d (weight = %d)\n", v, AM[0][v]);
+
+  scanf("%d", &V);
+  vector<vii> AL(V, vii());                      // initialize AL
+  for (int u = 0; u < V; ++u) {
+    int total_neighbors; scanf("%d", &total_neighbors);
+    while (total_neighbors--) {
+      int v, w; scanf("%d %d", &v, &w); --v;     // to 0-based indexing
+      AL[u].emplace_back(v, w);
+    }
+  }
+
+  printf("Neighbors of vertex 0:\n");            // k = |neighbors|
+  for (auto &[v, w] : AL[0])                     // O(k)
+    printf("Edge 0-%d (weight = %d)\n", v, w);
+
+  int E; scanf("%d", &E);
+  vector<iii> EL(E);                              // one way to store EL
+  for (int i = 0; i < E; ++i) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);
+    EL[i] = tie(w, u, v);
+  }
+  // edges sorted by weight (smallest->largest)
+  sort(EL.begin(), EL.end());
+  for (auto &[w, u, v] : EL)                     // C++17 style
+    printf("weight: %d (%d-%d)\n", w, u, v);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+class SegmentTree {                              // OOP style
+private:
+  int n;                                         // n = (int)A.size()
+  vi A, st, lazy;                                // the arrays
+
+  int l(int p) { return  p<<1; }                 // go to left child
+  int r(int p) { return (p<<1)+1; }              // go to right child
+
+  int conquer(int a, int b) {
+    if (a == -1) return b;                       // corner case
+    if (b == -1) return a;
+    return min(a, b);                            // RMQ
+  }
+
+  void build(int p, int L, int R) {              // O(n)
+    if (L == R)
+      st[p] = A[L];                              // base case
+    else {
+      int m = (L+R)/2;
+      build(l(p), L  , m);
+      build(r(p), m+1, R);
+      st[p] = conquer(st[l(p)], st[r(p)]);
+    }
+  }
+
+  void propagate(int p, int L, int R) {
+    if (lazy[p] != -1) {                         // has a lazy flag
+      st[p] = lazy[p];                           // [L..R] has same value
+      if (L != R)                                // not a leaf
+        lazy[l(p)] = lazy[r(p)] = lazy[p];       // propagate downwards
+      else                                       // L == R, a single index
+        A[L] = lazy[p];                          // time to update this
+      lazy[p] = -1;                              // erase lazy flag
+    }
+  }
+
+  int RMQ(int p, int L, int R, int i, int j) {   // O(log n)
+    propagate(p, L, R);                          // lazy propagation
+    if (i > j) return -1;                        // infeasible
+    if ((L >= i) && (R <= j)) return st[p];      // found the segment
+    int m = (L+R)/2;
+    return conquer(RMQ(l(p), L  , m, i          , min(m, j)),
+                   RMQ(r(p), m+1, R, max(i, m+1), j        ));
+  }
+
+  void update(int p, int L, int R, int i, int j, int val) { // O(log n)
+    propagate(p, L, R);                          // lazy propagation
+    if (i > j) return;
+    if ((L >= i) && (R <= j)) {                  // found the segment
+      lazy[p] = val;                             // update this
+      propagate(p, L, R);                        // lazy propagation
+    }
+    else {
+      int m = (L+R)/2;
+      update(l(p), L  , m, i          , min(m, j), val);
+      update(r(p), m+1, R, max(i, m+1), j        , val);
+      int lsubtree = (lazy[l(p)] != -1) ? lazy[l(p)] : st[l(p)];
+      int rsubtree = (lazy[r(p)] != -1) ? lazy[r(p)] : st[r(p)];
+      st[p] = (lsubtree <= rsubtree) ? st[l(p)] : st[r(p)];
+    }
+  }
+
+public:
+  SegmentTree(int sz) : n(sz), st(4*n), lazy(4*n, -1) {}
+
+  SegmentTree(const vi &_A) : SegmentTree((int)_A.size()) {
+    A = _A;
+    build(1, 0, n-1);
+  }
+
+  void update(int i, int j, int val) { update(1, 0, n-1, i, j, val); }
+
+  int RMQ(int i, int j) { return RMQ(1, 0, n-1, i, j); }
+};
+
+// #include <bits/stdc++.h>
+// using namespace std;
+
+// typedef vector<int> vi;
+
+// class SegmentTree {                              // OOP style
+// private:
+//   vi A;                                          // the underlying array
+//   int n;                                         // n = (int)A.size()
+//   vi st;                                         // segment tree array
+//   vi lazy;                                       // lazy propagation array
+
+//   int l(int p) { return  p<<1; }                 // go to left child
+//   int r(int p) { return (p<<1)+1; }              // go to right child
+
+//   int conquer(int a, int b) {
+//     if (a == -1) return b;                       // corner case
+//     if (b == -1) return a;
+//     return A[a] <= A[b] ? a : b;                 // RMQ
+//   }
+
+//   void build(int p, int L, int R) {              // O(n)
+//     if (L == R)
+//       st[p] = L;                                 // base case
+//     else {
+//       int m = (L+R)/2;
+//       build(l(p), L  , m);
+//       build(r(p), m+1, R);
+//       st[p] = conquer(st[l(p)], st[r(p)]);
+//     }
+//   }
+
+//   void propagate(int p, int L, int R) {
+//     if (lazy[p] != -1) {                         // has a lazy flag
+//       st[p] = L;                                 // [L..R] has same value
+//       if (L != R)                                // not a leaf
+//         lazy[l(p)] = lazy[r(p)] = lazy[p];       // propagate downwards
+//       else                                       // L == R, a single index
+//         A[L] = lazy[p];                          // time to update this
+//       lazy[p] = -1;                              // erase lazy flag
+//     }
+//   }
+
+//   void update(int p, int L, int R, int i, int j, int val) { // O(log n)
+//     propagate(p, L, R);                          // lazy propagation
+//     if (i > j) return;
+//     if ((L >= i) && (R <= j)) {                  // found the segment
+//       A[L] = val;
+//       lazy[p] = val;                             // update this
+//       propagate(p, L, R);                        // lazy propagation
+//     }
+//     else {
+//       int m = (L+R)/2;
+//       update(l(p), L  , m, i          , min(m, j), val);
+//       update(r(p), m+1, R, max(i, m+1), j        , val);
+//       st[p] = conquer(st[l(p)], st[r(p)]);
+//     }
+//   }
+
+//   int RMQ(int p, int L, int R, int i, int j) {   // O(log n)
+//     propagate(p, L, R);                          // lazy propagation
+//     if (i > j) return -1;                        // infeasible
+//     if ((L >= i) && (R <= j)) return st[p];      // found the segment
+//     int m = (L+R)/2;
+//     return conquer(RMQ(l(p), L  , m, i          , min(m, j)),
+//                    RMQ(r(p), m+1, R, max(i, m+1), j        ));
+//   }
+
+// public:
+//   SegmentTree(int sz) : n(sz), st(4*n), lazy(4*n, -1) {}
+
+//   SegmentTree(const vi &_A) : SegmentTree((int)_A.size()) {
+//     A = _A;
+//     build(1, 0, n-1);
+//   }
+
+//   void update(int i, int j, int val) { update(1, 0, n-1, i, j, val); }
+
+//   int RMQ(int i, int j) { return RMQ(1, 0, n-1, i, j); }
+// };
+
+int main() {
+  vi A = {18, 17, 13, 19, 15, 11, 20, 99};       // make n a power of 2
+  SegmentTree st(A);
+
+  printf("              idx    0, 1, 2, 3, 4, 5, 6, 7\n");
+  printf("              A is {18,17,13,19,15,11,20,oo}\n");
+  printf("RMQ(1, 3) = %d\n", st.RMQ(1, 3));      // 13
+  printf("RMQ(4, 7) = %d\n", st.RMQ(4, 7));      // 11
+  printf("RMQ(3, 4) = %d\n", st.RMQ(3, 4));      // 15
+
+  st.update(5, 5, 77);                           // update A[5] to 77
+  printf("              idx    0, 1, 2, 3, 4, 5, 6, 7\n");
+  printf("Now, modify A into {18,17,13,19,15,77,20,oo}\n");
+  printf("RMQ(1, 3) = %d\n", st.RMQ(1, 3));      // remains 13
+  printf("RMQ(4, 7) = %d\n", st.RMQ(4, 7));      // now 15
+  printf("RMQ(3, 4) = %d\n", st.RMQ(3, 4));      // remains 15
+
+  st.update(0, 3, 30);                           // update A[0..3] to 30
+  printf("              idx    0, 1, 2, 3, 4, 5, 6, 7\n");
+  printf("Now, modify A into {30,30,30,30,15,77,20,oo}\n");
+  printf("RMQ(1, 3) = %d\n", st.RMQ(1, 3));      // now 30
+  printf("RMQ(4, 7) = %d\n", st.RMQ(4, 7));      // remains 15
+  printf("RMQ(3, 4) = %d\n", st.RMQ(3, 4));      // remains 15
+
+  st.update(3, 3, 7);                            // update A[3] to 7
+  printf("              idx    0, 1, 2, 3, 4, 5, 6, 7\n");
+  printf("Now, modify A into {30,30,30, 7,15,77,20,oo}\n");
+  printf("RMQ(1, 3) = %d\n", st.RMQ(1, 3));      // now 7
+  printf("RMQ(4, 7) = %d\n", st.RMQ(4, 7));      // remains 15
+  printf("RMQ(3, 4) = %d\n", st.RMQ(3, 4));      // now 7
+
+  return 0;
+}
+// Union-Find Disjoint Sets Library written in OOP manner, using both path compression and union by rank heuristics
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+class UnionFind {                                // OOP style
+private:
+  vi p, rank, setSize;                           // vi p is the key part
+  int numSets;
+public:
+  UnionFind(int N) {
+    p.assign(N, 0); for (int i = 0; i < N; ++i) p[i] = i;
+    rank.assign(N, 0);                           // optional speedup
+    setSize.assign(N, 1);                        // optional feature
+    numSets = N;                                 // optional feature
+  }
+
+  int findSet(int i) { return (p[i] == i) ? i : (p[i] = findSet(p[i])); }
+  bool isSameSet(int i, int j) { return findSet(i) == findSet(j); }
+
+  int numDisjointSets() { return numSets; }      // optional
+  int sizeOfSet(int i) { return setSize[findSet(i)]; } // optional
+
+  void unionSet(int i, int j) {
+    if (isSameSet(i, j)) return;                 // i and j are in same set
+    int x = findSet(i), y = findSet(j);          // find both rep items
+    if (rank[x] > rank[y]) swap(x, y);           // keep x 'shorter' than y
+    p[x] = y;                                    // set x under y
+    if (rank[x] == rank[y]) ++rank[y];           // optional speedup
+    setSize[y] += setSize[x];                    // combine set sizes at y
+    --numSets;                                   // a union reduces numSets
+  }
+};
+
+int main() {
+  printf("Assume that there are 5 disjoint sets initially\n");
+  UnionFind UF(5); // create 5 disjoint sets
+  printf("%d\n", UF.numDisjointSets()); // 5
+  UF.unionSet(0, 1);
+  printf("%d\n", UF.numDisjointSets()); // 4
+  UF.unionSet(2, 3);
+  printf("%d\n", UF.numDisjointSets()); // 3
+  UF.unionSet(4, 3);
+  printf("%d\n", UF.numDisjointSets()); // 2
+  printf("isSameSet(0, 3) = %d\n", UF.isSameSet(0, 3)); // will return 0 (false)
+  printf("isSameSet(4, 3) = %d\n", UF.isSameSet(4, 3)); // will return 1 (true)
+  for (int i = 0; i < 5; i++) // findSet will return 1 for {0, 1} and 3 for {2, 3, 4}
+    printf("findSet(%d) = %d, sizeOfSet(%d) = %d\n", i, UF.findSet(i), i, UF.sizeOfSet(i));
+  UF.unionSet(0, 3);
+  printf("%d\n", UF.numDisjointSets()); // 1
+  for (int i = 0; i < 5; i++) // findSet will return 3 for {0, 1, 2, 3, 4}
+    printf("findSet(%d) = %d, sizeOfSet(%d) = %d\n", i, UF.findSet(i), i, UF.sizeOfSet(i));
+  return 0;
+}
+
+```
+
+### chap 3  - DP, DNC, greedy,cs
+
+```cpp
+// Lotto
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  bool first = true;
+  int k;
+  while (cin >> k, k) {
+    if (!first) cout << endl;
+    first = false;
+    int S[16];
+    for (int i = 0; i < k; ++i) scanf("%d", &S[i]);  // input: k sorted ints
+    for (int a = 0  ; a < k-5; ++a)                  // six nested loops!
+      for (int b = a+1; b < k-4; ++b)
+        for (int c = b+1; c < k-3; ++c)
+          for (int d = c+1; d < k-2; ++d)
+            for (int e = d+1; e < k-1; ++e)
+              for (int f = e+1; f < k  ; ++f)
+                printf("%d %d %d %d %d %d\n",S[a],S[b],S[c],S[d],S[e],S[f]);
+  }
+  return 0;
+}
+// Division
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  bool first = true;
+  int N;
+  while (scanf("%d", &N), N) {
+    if (!first) printf("\n");
+    first = false;
+    bool noSolution = true;
+    for (int fghij = 1234; fghij <= 98765/N; ++fghij) {
+      int abcde = fghij*N; // this way, abcde and fghij are at most 5 digits
+      int tmp, used = (fghij < 10000); // if digit f=0, then we have to flag it
+      tmp = abcde; while (tmp) { used |= 1<<(tmp%10); tmp /= 10; }
+      tmp = fghij; while (tmp) { used |= 1<<(tmp%10); tmp /= 10; }
+      if (used == (1<<10)-1) { // if all digits are used, print it
+        printf("%05d / %05d = %d\n", abcde, fghij, N);
+        noSolution = false;
+      }
+    }
+    if (noSolution) printf("There are no solutions for %d.\n", N);
+  }
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+int row[8], a, b, lineCounter;                   // global variables
+
+bool canPlace(int r, int c) {
+  for (int prev = 0; prev < c; ++prev)           // check previous Queens
+    if ((row[prev] == r) || (abs(row[prev]-r) == abs(prev-c)))
+      return false;                              // infeasible
+  return true;
+}
+
+void backtrack(int c) {
+  if ((c == 8) && (row[b] == a)) {               // a candidate sol
+    printf("%2d      %d", ++lineCounter, row[0]+1);
+    for (int j = 1; j < 8; ++j) printf(" %d", row[j]+1);
+    printf("\n");
+    return;                                      // optional statement
+  }
+  for (int r = 0; r < 8; ++r) {                  // try all possible row
+    if ((c == b) && (r != a)) continue;          // early pruning
+    if (canPlace(r, c))                          // can place a Queen here?
+      row[c] = r, backtrack(c+1);                // put here and recurse
+  }
+}
+
+int main() {
+  int TC; scanf("%d", &TC);
+  while (TC--) {
+    scanf("%d %d", &a, &b); --a; --b;            // to 0-based indexing
+    memset(row, 0, sizeof row); lineCounter = 0;
+    printf("SOLN       COLUMN\n");
+    printf(" #      1 2 3 4 5 6 7 8\n\n");
+    backtrack(0);                                // sub 8! operations
+    if (TC) printf("\n");
+  }
+  return 0;
+}
+// Simple Equations
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  int N; scanf("%d", &N);
+  while (N--) {
+    int A, B, C; scanf("%d %d %d", &A, &B, &C);
+    // 0.150s
+    // bool sol = false; int x, y, z;
+    // for (x = -100; x <= 100; ++x)                    // ~201^3 ~= 8M operations
+    //   for (y = -100; y <= 100; ++y)
+    //     for (z = -100; z <= 100; ++z)
+    //       if ((y != x) && (z != x) && (z != y) &&    // all 3 must be different
+    //           (x+y+z == A) && (x*y*z == B) && (x*x + y*y + z*z == C)) {
+    //         if (!sol) printf("%d %d %d\n", x, y, z);
+    //         sol = true;
+    //       }
+    // 0.000s, when x is reduced to -22 to 22 due to x*y*z = B and x <= y <= z so x^3 <= B or x <= B^(1/3)
+    bool sol = false; int x, y, z;
+    for (x = -22; (x <= 22) && !sol; ++x) if (x*x <= C)
+      for (y = -100; (y <= 100) && !sol; ++y) if ((y != x) && (x*x + y*y <= C))
+        for (z = -100; (z <= 100) && !sol; ++z)
+          if ((z != x) && (z != y) &&
+              (x+y+z == A) && (x*y*z == B) && (x*x + y*y + z*z == C)) {
+            printf("%d %d %d\n", x, y, z);
+            sol = true;
+          }
+    if (!sol) printf("No solution.\n");
+  }
+  return 0;
+}
+// Social Constraints 
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_n = 8;
+const int MAX_m = 20;
+
+int main() {
+  int n, m;
+  while (scanf("%d %d", &n, &m), (n || m)) {
+    int a[MAX_m], b[MAX_m], c[MAX_m];
+    for (int j = 0; j < m; ++j)
+      scanf("%d %d %d", &a[j], &b[j], &c[j]);
+    int p[MAX_n];
+    for (int i = 0; i < n; ++i)
+      p[i] = i;
+    int ans = 0;
+    do { // try all possible O(n!) permutations, the largest nput 8! = 40320
+      // check the given social constraints based on 'p' in O(m)
+      bool all_ok = true;
+      for (int j = 0; (j < m) && all_ok; ++j) { // check all constraints, max 20, each check 8 = 160
+        int pos_a = p[a[j]], pos_b = p[b[j]];
+        int d_pos = abs(pos_a-pos_b);
+        if (c[j] > 0) all_ok = (d_pos <= c[j]);      // positive, at most  c[j]
+        else          all_ok = (d_pos >= abs(c[j])); // negative, at least c[j]
+      }
+      if (all_ok) ++ans; // all constraints are satisfied by this permutation
+    }
+    while (next_permutation(p, p+n)); // the overall time complexity is thus O(m * n!)
+    printf("%d\n", ans); // overall complexity = 160 * 40320 = 6M, doable
+  }
+  return 0;
+}
+// Bars
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define LSOne(S) (S & (-S))
+
+const int MAX_n = 20;
+
+int main() {
+  int t; scanf("%d", &t);
+  while (t--) {
+    int X; scanf("%d", &X);
+    int n; scanf("%d", &n);
+    int l[MAX_n];
+    for (int i = 0; i < n; ++i)
+      scanf("%d", &l[i]);
+    int i;
+    for (i = 0; i < (1<<n); ++i) {               // for each subset, O(2^n)
+      int sum = 0;
+      // for (int j = 0; j < n; j++)             // check membership, O(n)
+      //   if (i & (1<<j))                       // see if bit 'j' is on?
+      //     sum += l[j];                        // if yes, process 'j'
+      int mask = i;                              // this is now O(k)
+      while (mask) {                             // k is the # of on bits
+        int two_pow_j = LSOne(mask);             // least significant bit
+        int j = __builtin_ctz(two_pow_j);        // 2^j = two_pow_j, get j
+        sum += l[j];
+        mask -= two_pow_j;
+      }
+      if (sum == X) break;                       // the answer is found
+    }
+    printf(i < (1<<n) ? "YES\n" : "NO\n");
+  }
+  return 0;
+}
+// Through the Desert
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const double EPS = 1e-9;
+
+typedef pair<int, int> ii;
+
+vector<ii> events;
+
+bool can(double f) {
+  int cur_d = 0, cur_n = 0, leak_rate = 0, dt = 0;
+  double original_f = f;
+  for (int i = 0; i < (int)events.size(); ++i) {
+    // for all events, consume this amount of fuel (0 amount if delta time is 0)
+    dt = (events[i].first - cur_d);
+    f -=  dt / 100.0 * cur_n; // consumption
+    f -= (dt) * leak_rate; // leak
+    if (f < 0) // quick check
+      return false;
+    // change a parameter, if needed
+    if (events[i].second <= 0) // Fuel consumption n
+      cur_n = -events[i].second;
+    else if (events[i].second == 1) // Leak
+      leak_rate++;
+    else if (events[i].second == 2) // Gas station
+      f = original_f;
+    else if (events[i].second == 3) // Mechanic
+      leak_rate = 0;
+    else if (events[i].second == 4) // Goal
+      break;
+    cur_d = events[i].first; // update time
+  }
+  return (f >= 0.0); // if still have enough fuel by goal, this simulation is a success, otherwise, it is a failure
+}
+
+int main() {
+  int n;
+  while (scanf("0 Fuel consumption %d\n", &n), n) {
+    events.clear();
+    events.emplace_back(0, -n); // first event
+    while (1) {
+      int d; char line[100]; scanf("%d ", &d); gets(line);
+      if (strncmp(line, "Fuel", 4) == 0) { // the first four characters are "Fuel"
+        sscanf(line, "Fuel consumption %d", &n);
+        events.emplace_back(d, -n);
+      }
+      else if (strcmp(line, "Leak") == 0)
+        events.emplace_back(d, 1);
+      else if (strcmp(line, "Gas station") == 0)
+        events.emplace_back(d, 2);
+      else if (strcmp(line, "Mechanic") == 0)
+        events.emplace_back(d, 3);
+      else if (strcmp(line, "Goal") == 0) {
+        events.emplace_back(d, 4);
+        break;
+      }
+    }
+    // Binary Search the Answer (BSTA), then simulate
+    // // while loop version
+    // double lo = 0.0, hi = 10000.0;
+    // while (fabs(hi-lo) > EPS) {                  // answer is not found yet
+    //   double mid = (lo+hi) / 2.0;                // try the middle value
+    //   can(mid) ? hi = mid : lo = mid;            // then continue
+    // }
+    // for loop version
+    double lo = 0.0, hi = 10000.0;
+    for (int i = 0; i < 50; ++i) {               // log_2(10000/1e-9) ~= 43
+      double mid = (lo+hi) / 2.0;                // looping 50x is enough
+      can(mid) ? hi = mid : lo = mid;
+    }
+    printf("%.3lf\n", hi);                       // this is the answer
+  }
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+const int MAX_N = 100010;
+
+int n = 12, A[] = {-7, 10, 9, 2, 3, 8, 8, 1, 2, 3, 4, 99};
+
+void print_array(const char *s, vi &L, int n) {
+  for (int i = 0; i < n; ++i) {
+    if (i) printf(", ");
+    else printf("%s: [", s);
+    printf("%d", L[i]);
+  }
+  printf("]\n");
+}
+
+vi p;                                            // predecessor array
+
+void print_LIS(int i) {                          // backtracking routine
+  if (p[i] == -1) { printf("%d", A[i]); return; }// base case
+  print_LIS(p[i]);                               // backtrack
+  printf(" %d", A[i]);
+}
+
+int memo[MAX_N];                                 // MAX_N up to 10^4
+
+int LIS(int i) {                                 // O(n^2) overall
+  if (i == 0) return 1;
+  int &ans = memo[i];
+  if (ans != -1) return ans;                     // was computed before
+  ans = 0;
+  for (int j = 0; j < i; ++j)                    // O(n) here
+    if (A[j] < A[i])                             // increasing condition
+      ans = max(ans, LIS(j)+1);                  // pick the max
+  return ans;
+}
+
+int main() {
+  // early 2000 problems usually accept O(n^2) solution
+  memset(memo, -1, sizeof memo);
+  printf("LIS length is %d\n\n", LIS(n-1));      // with O(n^2) DP
+
+  // 2020s problems will likely only accept O(n log k) solution
+  int k = 0, lis_end = 0;
+  vi L(n, 0), L_id(n, 0);
+  p.assign(n, -1);
+
+  for (int i = 0; i < n; ++i) {                  // O(n)
+    int pos = lower_bound(L.begin(), L.begin()+k, A[i]) - L.begin();
+    L[pos] = A[i];                               // greedily overwrite this
+    L_id[pos] = i;                               // remember the index too
+    p[i] = pos ? L_id[pos-1] : -1;               // predecessor info
+    if (pos == k) {                              // can extend LIS?
+      k = pos+1;                                 // k = longer LIS by +1
+      lis_end = i;                               // keep best ending i
+    }
+
+    printf("Considering element A[%d] = %d\n", i, A[i]);
+    printf("LIS ending at A[%d] is of length %d: ", i, pos+1);
+    printf("[");
+    print_LIS(i);
+    printf("]\n");
+    print_array("L is now", L, k);
+    printf("\n");
+  }
+
+  printf("Final LIS is of length %d: ", k);
+  print_LIS(lis_end); printf("\n");
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+int main() {
+  int n = 9, A[] = { 4,-5, 4,-3, 4, 4,-4, 4,-5 };// a sample array A
+  int sum = 0, ans = 0;
+  for (int i = 0; i < n; ++i) {                  // linear scan, O(n)
+    sum += A[i];                                 // greedily extend this
+    ans = max(ans, sum);                         // keep the cur max RSQ
+    if (sum < 0) sum = 0;                        // reset the running sum
+  }                                              // if it ever dips below 0
+  // rationale: starting from 0 is better for future
+  // iterations than starting from -ve running sum
+  printf("Max 1D Range Sum = %d\n", ans);        // should be 9
+  return 0;
+}
+// Maximum Sum
+// O(n^3) 1D DP + greedy (Kadane's) solution, 0.000s in UVa
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define MAX_n 110
+
+int A[MAX_n][MAX_n];
+
+int main() {
+  int n; scanf("%d", &n);                        // square matrix size
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j) {
+      scanf("%d", &A[i][j]);
+      if (j > 0) A[i][j] += A[i][j-1];           // pre-processing
+    }
+  int maxSubRect = -127*100*100;                 // lowest possible val
+  for (int l = 0; l < n; ++l)
+    for (int r = l; r < n; ++r) {
+      int subRect = 0;
+      for (int row = 0; row < n; ++row) {
+        // Max 1D Range Sum on columns of this row
+        if (l > 0) subRect += A[row][r] - A[row][l-1];
+        else       subRect += A[row][r];
+        // Kadane's algorithm on rows
+        if (subRect < 0) subRect = 0;            // restart if negative
+        maxSubRect = max(maxSubRect, subRect);
+      }
+    }
+  printf("%d\n", maxSubRect);
+  return 0;
+}
+
+
+
+/*
+// O(n^4) DP solution, ~0.076s in UVa
+int main() {
+  int n; scanf("%d", &n);                        // square matrix size
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j) {
+      scanf("%d", &A[i][j]);
+      if (i > 0) A[i][j] += A[i-1][j];           // add from top
+      if (j > 0) A[i][j] += A[i][j-1];           // add from left
+      if (i > 0 && j > 0) A[i][j] -= A[i-1][j-1];// avoid double count
+    }                                            // inclusion-exclusion
+  int maxSubRect = -127*100*100;                 // the lowest possible val
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j)                  // start coordinate
+      for (int k = i; k < n; ++k)
+        for (int l = j; l < n; ++l) {            // end coord
+          int subRect = A[k][l];                 // from (0, 0) to (k, l)
+          if (i > 0) subRect -= A[i-1][l];       // O(1)
+          if (j > 0) subRect -= A[k][j-1];       // O(1)
+          if (i > 0 && j > 0) subRect += A[i-1][j-1]; // O(1)
+          maxSubRect = max(maxSubRect, subRect); // the answer is here
+        }
+  printf("%d\n", maxSubRect);
+  return 0;
+}
+*/
+
+
+
+/*
+// O(n^6) brute force solution, TLE (> 3s) in UVa
+int main() {
+  int n; scanf("%d", &n);                        // square matrix size
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j)
+      scanf("%d", &A[i][j]);
+  int maxSubRect = -127*100*100;                 // the lowest possible val
+  for (int i = 0; i < n; ++i)
+    for (int j = 0; j < n; ++j)                  // start coordinate
+      for (int k = i; k < n; ++k)
+        for (int l = j; l < n; ++l) {            // end coord
+          int subRect = 0;                       // sum this sub-rectangle
+          for (int a = i; a <= k; ++a)
+            for (int b = j; b <= l; ++b)
+              subRect += A[a][b];
+          maxSubRect = max(maxSubRect, subRect); // the answer is here
+        }
+  printf("%d\n", maxSubRect);
+  return 0;
+}
+*/
+// Coin Change
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int N = 5, V, coinValue[5] = {1, 5, 10, 25, 50}, memo[6][7500];
+// N and coinValue are fixed for this problem, max V is 7489
+
+int ways(int type, int value) {
+  if (value == 0) return 1;                      // one way, use nothing
+  if ((value < 0) || (type == N)) return 0;      // invalid or done
+  int &ans = memo[type][value];
+  if (ans != -1) return ans;                     // was computed before
+  return ans = ways(type+1, value) +             // ignore this type
+               ways(type, value-coinValue[type]);// one more of this type
+}
+
+int main() {
+  memset(memo, -1, sizeof memo); // we only need to initialize this once
+  while (scanf("%d", &V) != EOF)
+    printf("%d\n", ways(0, V));
+  return 0;
+}
+// Cutting Sticks
+// Top-Down DP
+
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+
+int l, n, A[55], memo[55][55];
+
+int cut(int left, int right) {
+  if (left + 1 == right)       return 0;
+  if (memo[left][right] != -1) return memo[left][right];
+
+  int ans = 2000000000;
+  for (int i = left + 1; i < right; i++)
+    ans = min(ans, cut(left, i) + cut(i, right) + (A[right]-A[left]));
+  return memo[left][right] = ans;
+}
+
+int main() {
+  while (scanf("%d", &l), l) {
+    A[0] = 0;
+    scanf("%d", &n);
+    for (int i = 1; i <= n; i++) scanf("%d", &A[i]);
+    A[n + 1] = l;
+
+    memset(memo, -1, sizeof memo);
+    printf("The minimum cutting is %d.\n", cut(0, n + 1)); // start with left = 0 and right = n + 1
+  }
+
+  return 0;
+}
+// SuperSale 
+
+// 0-1 Knapsack DP (Top-Down, faster)
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_N = 1010;
+const int MAX_W = 40;
+
+int N, V[MAX_N], W[MAX_N], memo[MAX_N][MAX_W];
+
+int dp(int id, int remW) {
+  if ((id == N) || (remW == 0)) return 0;        // two base cases
+  int &ans = memo[id][remW];
+  if (ans != -1) return ans;                     // computed before
+  if (W[id] > remW) return ans = dp(id+1, remW); // no choice, skip
+  return ans = max(dp(id+1, remW),               // has choice, skip
+                   V[id]+dp(id+1, remW-W[id]));  // or take
+}
+
+int main() {
+  int T; scanf("%d", &T);
+  while (T--) {
+    memset(memo, -1, sizeof memo);
+    scanf("%d", &N);
+    for (int i = 0; i < N; ++i)
+      scanf("%d %d", &V[i], &W[i]);
+    int ans = 0;
+    int G; scanf("%d", &G);
+    while (G--) {
+      int MW; scanf("%d", &MW);
+      ans += dp(0, MW);
+    }
+    printf("%d\n", ans);
+  }
+  return 0;
+}
+
+/*
+
+// 0-1 Knapsack DP (Bottom-Up)
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_N = 1010;
+const int MAX_W = 40;
+
+int V[MAX_N], W[MAX_N], C[MAX_N][MAX_W];
+
+int main() {
+  int T; scanf("%d", &T);
+  while (T--) {
+    int N; scanf("%d", &N);
+    for (int i = 1; i<= N; ++i)
+      scanf("%d %d", &V[i], &W[i]);
+    int ans = 0;
+    int G; scanf("%d", &G);
+    while (G--) {
+      int MW; scanf("%d", &MW);
+      for (int i = 0; i <= N;  ++i) C[i][0] = 0;
+      for (int w = 0; w <= MW; ++w) C[0][w] = 0;
+      for (int i = 1; i <= N; ++i)
+        for (int w = 1; w <= MW; ++w) {
+          if (W[i] > w) C[i][w] = C[i-1][w];
+          else          C[i][w] = max(C[i-1][w], V[i] + C[i-1][w-W[i]]);
+        }
+      ans += C[N][MW];
+    }
+    printf("%d\n", ans);
+  }
+  return 0;
+}
+
+*/
+/* How do you add? */
+
+// top-down
+
+/*
+#include <cstdio>
+#include <cstring>
+using namespace std;
+
+int N, K, memo[110][110];
+
+int ways(int N, int K) {
+  if (K == 1) // only can use 1 number to add up to N
+    return 1; // the answer is definitely 1, that number itself
+  else if (memo[N][K] != -1)
+    return memo[N][K];
+
+  // if K > 1, we can choose one number from [0..N] to be one of the number and recursively compute the rest
+  int total_ways = 0;
+  for (int split = 0; split <= N; split++)
+    total_ways = (total_ways + ways(N - split, K - 1)) % 1000000; // we just need the modulo 1M
+  return memo[N][K] = total_ways; // memoize them
+}
+
+int main() {
+  memset(memo, -1, sizeof memo);
+  while (scanf("%d %d", &N, &K), (N || K))
+    printf("%d\n", ways(N, K)); // some recursion formula + top down DP
+  return 0;
+}
+*/
+
+
+
+// bottom-up
+
+#include <cstdio>
+#include <cstring>
+using namespace std;
+
+int main() {
+  int i, j, split, dp[110][110], N, K;
+
+  memset(dp, 0, sizeof dp);
+
+  for (i = 0; i <= 100; i++) // these are the base cases
+    dp[i][1] = 1;
+
+  for (j = 1; j < 100; j++) // these three nested loops form the correct topological order
+    for (i = 0; i <= 100; i++)
+      for (split = 0; split <= 100 - i; split++) {
+        dp[i + split][j + 1] += dp[i][j];
+        dp[i + split][j + 1] %= 1000000;
+      }
+
+  while (scanf("%d %d", &N, &K), (N || K))
+    printf("%d\n", dp[N][K]);
+
+  return 0;
+}
+// UVa 11450 - Wedding Shopping - Bottom Up (faster than Top Down)
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_gm = 30; // up to 20 garments at most and 20 models/garment
+const int MAX_M = 210; // maximum budget is 200
+
+int price[MAX_gm][MAX_gm]; // price[g (<= 20)][k (<= 20)]
+// bool reachable[MAX_gm][MAX_M]; // reachable table[g (<= 20)][money (<= 200)]
+// if using space saving technique
+bool reachable[2][MAX_M]; // reachable table[ONLY TWO ROWS][money (<= 200)]
+
+int main() {
+  int TC; scanf("%d", &TC);
+  while (TC--) {
+    int M, C; scanf("%d %d", &M, &C);
+    for (int g = 0; g < C; ++g) {
+      scanf("%d", &price[g][0]);                 // store k in price[g][0]
+      for (int k = 1; k <= price[g][0]; ++k)
+        scanf("%d", &price[g][k]);
+    }
+
+    memset(reachable, false, sizeof reachable);  // clear everything
+    // initial values (base cases), using first garment g = 0
+    for (int k = 1; k <= price[0][0]; ++k)
+      if (M-price[0][k] >= 0)
+        reachable[0][M-price[0][k]] = true;
+
+    int money;
+    // for (int g = 1; g < C; ++g)               // for each garment
+    //   for (money = 0; money < M; money++) if (reachable[g-1][money])
+    //     for (int k = 1; k <= price[g][0]; ++k) if (money-price[g][k] >= 0)
+    //       reachable[g][money-price[g][k]] = true; // also reachable now
+    // for (money = 0; money <= M && !reachable[C-1][money]; ++money);
+
+    // then we modify the main loop in int main a bit
+    int cur = 1;                                 // we start with this row
+    for (int g = 1; g < C; ++g) {                // for each garment
+      memset(reachable[cur], false, sizeof reachable[cur]); // reset row
+      for (money = 0; money < M; ++money) if (reachable[!cur][money])
+        for (int k = 1; k <= price[g][0]; ++k) if (money-price[g][k] >= 0)
+          reachable[cur][money-price[g][k]] = true;
+      cur = 1-cur;                               // flip the two rows
+    }
+    for (money = 0; money <= M && !reachable[!cur][money]; ++money);
+
+    if (money == M+1) printf("no solution\n");   // last row has no on bit
+    else              printf("%d\n", M-money);
+  }
+  return 0;
+}
+// UVa 11450 - Wedding Shopping - Top Down
+// this code is similar to recursive backtracking code
+// parts of the code specific to top-down DP are commented with: `TOP-DOWN'
+// if these lines are commented, this top-down DP will become backtracking!
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_gm = 30; // up to 20 garments at most and 20 models/garment
+const int MAX_M = 210; // maximum budget is 200
+
+int M, C, price[MAX_gm][MAX_gm]; // price[g (<= 20)][k (<= 20)]
+int memo[MAX_gm][MAX_M]; // TOP-DOWN: dp table [g (< 20)][money (<= 200)]
+
+int dp(int g, int money) {
+  if (money < 0) return -1e9;                    // fail, return -ve number
+  if (g == C) return M-money;                    // we are done
+  // if the line below is commented, top-down DP will become backtracking!!
+  if (memo[g][money] != -1) return memo[g][money]; // TOP-DOWN: memoization
+  int ans = -1;                                  // start with a -ve number
+  for (int k = 1; k <= price[g][0]; ++k)         // try each model k
+    ans = max(ans, dp(g+1, money-price[g][k]));
+  return memo[g][money] = ans;                   // TOP-DOWN: memoize ans
+}
+
+/*
+int dp(int g, money) {
+  if (money < 0) return -1e9;                    // must check this first
+  if (g == C) return M-money;                    // money can't be < 0
+  int &ans = memo[g][money];                     // remember memory address
+  if (ans != -1) return ans;
+  for (int k = 1; k <= price[g][0]; ++k)         // try each model k
+    ans = max(ans, dp(g+1, money-price[g][k]));
+  return ans;                                    // ans == memo[g][money]
+}
+
+void print_dp(int g, money) {                    // void function
+  if (g == C || money < 0) return;               // similar base cases
+  for (int k = 1; k <= price[g][0]; ++k)         // which model k is opt?
+    if (dp(g+1, money-price[g][k]) == memo[g][money]) { // this one
+      printf("%d - ", price[g][k]);
+      print_dp(g+1, money-price[g][k]);          // recurse to this only
+      break;
+    }
+}
+*/
+
+int main() {                                     // easy to code
+  int TC; scanf("%d", &TC);
+  while (TC--) {
+    scanf("%d %d", &M, &C);
+    for (int g = 0; g < C; ++g) {
+      scanf("%d", &price[g][0]);                 // store k in price[g][0]
+      for (int k = 1; k <= price[g][0]; ++k)
+        scanf("%d", &price[g][k]);
+    }
+    memset(memo, -1, sizeof memo);               // TOP-DOWN: init memo
+    if (dp(0, M) < 0) printf("no solution\n");   // start the top-down DP
+    else              printf("%d\n", dp(0, M));
+  }
+  return 0;
+}
+// Collecting Beepers
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define LSOne(S) ((S) & -(S))
+
+const int MAX_n = 11;
+
+int dist[MAX_n][MAX_n], memo[MAX_n][1<<(MAX_n-1)]; // Karel + max 10 beepers
+
+int dp(int u, int mask) {                        // mask = free coordinates
+  if (mask == 0) return dist[u][0];              // close the loop
+  int &ans = memo[u][mask];
+  if (ans != -1) return ans;                     // computed before
+  ans = 2000000000;
+  int m = mask;
+  while (m) {                                    // up to O(n)
+    int two_pow_v = LSOne(m);                    // but this is fast
+    int v = __builtin_ctz(two_pow_v)+1;          // offset v by +1
+    ans = min(ans, dist[u][v] + dp(v, mask^two_pow_v)); // keep the min
+    m -= two_pow_v;
+  }
+  return ans;
+}
+
+int main() {
+  int TC; scanf("%d", &TC);
+  while (TC--) {
+    int xsize, ysize; scanf("%d %d", &xsize, &ysize); // these two values are not used
+    int x[MAX_n], y[MAX_n];
+    scanf("%d %d", &x[0], &y[0]);
+    int n; scanf("%d", &n); ++n;                 // include Karel
+    for (int i = 1; i < n; ++i)                  // Karel is at index 0
+      scanf("%d %d", &x[i], &y[i]);
+    for (int i = 0; i < n; ++i)                  // build distance table
+      for (int j = i; j < n; ++j)
+        dist[i][j] = dist[j][i] = abs(x[i]-x[j]) + abs(y[i]-y[j]); // Manhattan distance
+    memset(memo, -1, sizeof memo);
+    printf("%d\n", dp(0, (1<<(n-1))-1));         // DP-TSP
+    // printf("The shortest path has length %d\n", dp(0, (1<<(n-1))-1)); // DP-TSP
+  }
+  return 0;
+}
+// Distributing Ballot Boxes
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef tuple<double, int, int> dii;             // (ratio r, num, den)
+
+int main() {
+  int N, B;
+  while (scanf("%d %d", &N, &B), (N != -1 && B != -1)) {
+    priority_queue<dii> pq;                      // max pq
+    for (int i = 0; i < N; i++) {
+      int a; scanf("%d", &a);
+      pq.push({(double)a/1.0, a, 1});            // initially, 1 box/city
+    }
+    B -= N;                                      // remaining boxes
+    while (B--) {                                // extra box->largest city
+      auto [r, num, den] = pq.top(); pq.pop();   // current largest city
+      pq.push({num/(den+1.0), num, den+1});      // reduce its workload
+    }
+    printf("%d\n", (int)ceil(get<0>(pq.top()))); // the final answer
+  } // all other cities in the max pq will have equal or lesser ratio
+  return 0;
+}
+// Kattis - grass / UVa 10382 - Watering Grass
+
+#include <bits/stdc++.h>
+using namespace std;
+ 
+const double EPS = 1e-9;
+
+struct sp {
+  int x, r;
+  double x_l, x_r;
+};
+
+sp sprinkler[10010];
+
+bool cmp(sp a, sp b) {
+  if (fabs(a.x_l - b.x_l) > EPS) return a.x_l < b.x_l;
+  else                           return a.x_r > b.x_r;
+}
+
+int main() {
+  int n, l, w;
+  while (scanf("%d %d %d", &n, &l, &w) != EOF) {
+    for (int i = 0; i < n; ++i) {
+      scanf("%d %d", &sprinkler[i].x, &sprinkler[i].r);
+      if (2*sprinkler[i].r >= w) {
+        double d_x = sqrt((double)sprinkler[i].r*sprinkler[i].r - (w/2.0) * (w/2.0));
+        sprinkler[i].x_l = sprinkler[i].x-d_x; // sort based on smaller x_l and then larger x_r
+        sprinkler[i].x_r = sprinkler[i].x+d_x;
+      }
+      else
+        sprinkler[i].x_l = sprinkler[i].x_r = sprinkler[i].x; // to make this unselected...
+    }
+ 
+    sort(sprinkler, sprinkler+n, cmp);         // sort the sprinklers
+    bool possible = true;
+    double covered = 0.0;
+    int ans = 0;
+    for (int i = 0; (i < n) && possible; ++i) {
+      if (covered > l) break;                  // done
+      if (sprinkler[i].x_r < covered+EPS) continue; // inside prev interval
+      if (sprinkler[i].x_l < covered+EPS) {    // can cover
+        double max_r = -1.0;
+        int max_id;
+        for (int j = i; (j < n) && (sprinkler[j].x_l < covered+EPS); j++)
+          if (sprinkler[j].x_r > max_r) {      // go to right to find
+            max_r = sprinkler[j].x_r;          // interval with
+            max_id = j;                        // the largest coverage
+          }
+        ++ans;
+        covered = max_r;                       // jump here
+        i = max_id;
+      }
+      else
+        possible = false;
+    }
+    if (!possible || (covered < l)) printf("-1\n");
+    else                            printf("%d\n", ans);
+  }
+
+  return 0;
+}
+// The Dragon of Loowater
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+int main() {
+  int n, m;
+  while (scanf("%d %d", &n, &m), (n || m)) {
+    vi D(n);
+    vi H(m);
+    for (int d = 0; d < n; ++d) scanf("%d", &D[d]);
+    for (int k = 0; k < m; ++k) scanf("%d", &H[k]);
+    sort(D.begin(), D.end());                        // sorting is an important
+    sort(H.begin(), H.end());                        // pre-processing step
+    int gold = 0, d = 0, k = 0;                      // both arrays are sorted
+    while ((d < n) && (k < m)) {                     // while not done yet
+      while ((k < m) && (D[d] > H[k])) ++k;          // find required knight k
+      if (k == m) break;                             // loowater is doomed :S
+      gold += H[k];                                  // pay this amount of gold
+      ++d; ++k;                                      // next dragon & knight
+    }
+    if (d == n) printf("%d\n", gold);                // all dragons are chopped
+    else        printf("Loowater is doomed!\n");
+  }
+  return 0;
+}
+
+```
+
+```cpp
+// Wetlands of Florida
+// classic DFS flood fill
+
+#include <bits/stdc++.h>
+using namespace std;
+
+char line[150], grid[150][150];
+int R, C;
+
+int dr[] = { 1, 1, 0,-1,-1,-1, 0, 1};            // the order is:
+int dc[] = { 0, 1, 1, 1, 0,-1,-1,-1};            // S/SE/E/NE/N/NW/W/SW
+
+int floodfill(int r, int c, char c1, char c2) {  // returns the size of CC
+  if ((r < 0) || (r >= R) || (c < 0) || (c >= C)) return 0; // outside grid
+  if (grid[r][c] != c1) return 0;                // does not have color c1
+  int ans = 1;                                   // (r, c) has color c1
+  grid[r][c] = c2;                               // to avoid cycling
+  for (int d = 0; d < 8; ++d)
+    ans += floodfill(r+dr[d], c+dc[d], c1, c2);  // the code is neat as
+  return ans;                                    // we use dr[] and dc[]
+}
+
+// inside int main()
+int main() {
+  // read the grid as a global 2D array + read (row, col) query coordinates
+  int TC; sscanf(gets(line), "%d", &TC);
+  gets(line); // remove dummy line
+
+  while (TC--) {
+    R = 0;
+    while (1) {
+      gets(grid[R]);
+      if ((grid[R][0] != 'L') && (grid[R][0] != 'W')) // start of query
+        break;
+      ++R;
+    }
+    C = (int)strlen(grid[0]);
+
+    strcpy(line, grid[R]);
+    while (1) {
+      int row, col; sscanf(line, "%d %d", &row, &col); row--; col--; // index starts from 0!
+      printf("%d\n", floodfill(row, col, 'W', '.')); // count size of wet area
+      floodfill(row, col, '.', 'W'); // restore for next query
+      gets(line);
+      if (strcmp(line, "") == 0 || feof(stdin)) // next test case or last test case
+        break;
+    }
+
+    if (TC)
+      printf("\n");
+  }
+
+  return 0;
+}
+// Bicoloring
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+const int INF = 1e9;
+
+int main() {
+  int n;
+  while (scanf("%d", &n), n) {
+    vector<vi> AL(n, vi());                      // notice: vi, not vii
+    int l; scanf("%d", &l);
+    while (l--) {
+      int a, b; scanf("%d %d", &a, &b);
+      AL[a].push_back(b);
+      AL[b].push_back(a);                        // bidirectional
+    }
+    int s = 0;
+    queue<int> q; q.push(s);
+    vi color(n, INF); color[s] = 0;
+    bool isBipartite = true;                     // add a Boolean flag
+    while (!q.empty() && isBipartite) {          // as with original BFS
+      int u = q.front(); q.pop();
+      for (auto &v : AL[u]) {
+        if (color[v] == INF) {                   // don't record distances
+          color[v] = 1-color[u];                 // just record two colors
+          q.push(v);
+        }
+        else if (color[v] == color[u]) {         // u & v have same color
+          isBipartite = false;                   // a coloring conflict :(
+          break;                                 // optional speedup
+        }
+      }
+    }
+    printf("%sBICOLORABLE.\n", (isBipartite ? "" : "NOT "));
+  }
+  return 0;
+}
+// Beverages
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+int main() {
+  int caseNo = 0;
+  while (1) {
+    char line[1000]; gets(line);
+    if (feof(stdin)) break;
+
+    int N; sscanf(line, "%d", &N);
+    vector<vi> AL(N, vi());
+    unordered_map<string, int> mapper;
+    unordered_map<int, string> reverseMapper;
+    for (int i = 0; i < N; ++i) {
+      char B1[60]; gets(B1);
+      mapper[(string)B1] = i;                    // give index i to B1
+      reverseMapper[i] = (string)B1;
+    }
+
+    vi in_degree(N, 0);
+    int M; sscanf(gets(line), "%d", &M);
+    for (int i = 0; i < M; ++i) {
+      char B1[60], B2[60]; sscanf(gets(line), "%s %s", &B1, &B2);
+      int a = mapper[(string)B1], b = mapper[(string)B2];
+      AL[a].push_back(b);                        // directed edge
+      ++in_degree[b];
+    }
+
+    printf("Case #%d: Dilbert should drink beverages in this order:", ++caseNo);
+
+    // enqueue vertices with zero incoming degree into a (priority) queue pq
+    priority_queue<int, vi, greater<int>> pq;    // min priority queue
+    for (int u = 0; u < N; ++u)
+      if (in_degree[u] == 0)                     // next to be processed
+        pq.push(u);                              // smaller index first
+
+    while (!pq.empty()) {                        // Kahn's algorithm
+      int u = pq.top(); pq.pop();
+      printf(" %s", reverseMapper[u].c_str());   // process u here
+      for (auto &v : AL[u]) {
+        --in_degree[v];                          // virtually remove u->v
+        if (in_degree[v] > 0) continue;          // not a candidate, skip
+        pq.push(v);                              // enqueue v in pq
+      }
+    }
+
+    printf(".\n\n");
+    gets(line); // dummy
+  }
+  return 0;
+}
+// Come and Go
+// check if the graph is strongly connected, i.e. the SCC of the graph is the graph itself (only 1 SCC)
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+typedef vector<ii> vii;
+
+enum { UNVISITED };
+
+int dfsNumberCounter, numSCC;
+vector<vii> AL, AL_T;
+vi dfs_num, dfs_low, S, visited;                 // global variables
+stack<int> St;
+
+void tarjanSCC(int u) {
+  dfs_low[u] = dfs_num[u] = dfsNumberCounter++;  // dfs_low[u] <= dfs_num[u]
+  St.push(u);                                    // remember the order
+  visited[u] = 1;
+  for (auto &[v, w] : AL[u]) {
+    if (dfs_num[v] == UNVISITED)
+      tarjanSCC(v);
+    if (visited[v])                              // condition for update
+      dfs_low[u] = min(dfs_low[u], dfs_low[v]);
+  }
+
+  if (dfs_low[u] == dfs_num[u]) {                // a root/start of an SCC
+    ++numSCC;                                    // when recursion unwinds
+    while (1) {
+      int v = St.top(); St.pop(); visited[v] = 0;
+      if (u == v) break;
+    }
+  }
+}
+
+void Kosaraju(int u, int pass) { // pass = 1 (original), 2 (transpose)
+  dfs_num[u] = 1;
+  vii &neighbor = (pass == 1) ? AL[u] : AL_T[u]; // by ref to avoid copying
+  for (auto &[v, w] : neighbor)                  // C++17 style, w ignored
+    if (dfs_num[v] == UNVISITED)
+      Kosaraju(v, pass);
+  S.push_back(u); // as in finding topological order in Section 4.2.5
+}
+
+int main() {
+  int N, M;
+  while (scanf("%d %d", &N, &M), (N || M)) {
+    AL.assign(N, vii());
+    AL_T.assign(N, vii()); // the transposed graph
+    while (M--) {
+      int V, W, P; scanf("%d %d %d", &V, &W, &P); --V; --W; // to 0-based indexing
+      AL[V].emplace_back(W, 1); // always
+      AL_T[W].emplace_back(V, 1);
+      if (P == 2) { // if this is two way, add the reverse direction
+        AL[W].emplace_back(V, 1);
+        AL_T[V].emplace_back(W, 1);
+      }
+    }
+
+    // run Tarjan's SCC code here
+    dfs_num.assign(N, UNVISITED); dfs_low.assign(N, 0); visited.assign(N, 0);
+    while (!St.empty()) St.pop();
+    dfsNumberCounter = numSCC = 0;
+    for (int u = 0; u < N; ++u)
+     if (dfs_num[u] == UNVISITED)
+       tarjanSCC(u);
+
+    // // run Kosaraju's SCC code here
+    // S.clear(); // first pass: record the post-order of original graph
+    // dfs_num.assign(N, UNVISITED);
+    // for (int u = 0; u < N; ++u)
+    //   if (dfs_num[u] == UNVISITED)
+    //     Kosaraju(u, 1);
+    // int numSCC = 0; // second pass: explore SCCs using first pass order
+    // dfs_num.assign(N, UNVISITED);
+    // for (int i = N-1; i >= 0; --i)
+    //   if (dfs_num[S[i]] == UNVISITED)
+    //     numSCC++, Kosaraju(S[i], 2);             // on transposed graph
+
+    // if SCC is only 1, print 1, otherwise, print 0
+    printf("%d\n", numSCC == 1 ? 1 : 0);
+  }
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<ii> vii;
+typedef vector<int> vi;
+
+enum { UNVISITED };                              // basic flag
+
+// these variables have to be global to be easily accessible by our recursion (other ways exist)
+vector<vii> AL;
+vi dfs_num, dfs_low, dfs_parent, articulation_vertex;
+int dfsNumberCounter, dfsRoot, rootChildren;
+
+void articulationPointAndBridge(int u) {
+  dfs_low[u] = dfs_num[u] = dfsNumberCounter++;  // dfs_low[u]<=dfs_num[u]
+  for (auto &[v, w] : AL[u]) {
+    if (dfs_num[v] == UNVISITED) {               // a tree edge
+      dfs_parent[v] = u;
+      if (u == dfsRoot) ++rootChildren;          // special case, root
+
+      articulationPointAndBridge(v);
+
+      if (dfs_low[v] >= dfs_num[u])              // for articulation point
+        articulation_vertex[u] = 1;              // store this info first
+      if (dfs_low[v] > dfs_num[u])               // for bridge
+        printf(" Edge (%d, %d) is a bridge\n", u, v);
+      dfs_low[u] = min(dfs_low[u], dfs_low[v]);  // subtree, always update
+    }
+    else if (v != dfs_parent[u])                 // if a non-trivial cycle
+      dfs_low[u] = min(dfs_low[u], dfs_num[v]);  // then can update
+  }
+}
+
+int main() {
+  /*
+  // Left graph in Figure 4.6/4.7/4.8
+  6
+  1 1 0
+  3 0 0 2 0 4 0
+  1 1 0
+  1 4 0
+  3 1 0 3 0 5 0
+  1 4 0
+
+  // Right graph in Figure 4.6/4.7/4.8
+  6
+  1 1 0
+  5 0 0 2 0 3 0 4 0 5 0
+  1 1 0
+  1 1 0
+  2 1 0 5 0
+  2 1 0 4 0
+  */
+
+  freopen("articulation_in.txt", "r", stdin);
+
+  int V; scanf("%d", &V);
+  AL.assign(V, vii());
+  for (int u = 0; u < V; ++u) {
+    int k; scanf("%d", &k);
+    while (k--) {
+      int v, w; scanf("%d %d", &v, &w);
+      AL[u].emplace_back(v, w);
+    }
+  }
+
+  printf("Articulation Points & Bridges (the input graph must be UNDIRECTED)\n");
+  dfs_num.assign(V, UNVISITED); dfs_low.assign(V, 0);
+  dfs_parent.assign(V, -1); articulation_vertex.assign(V, 0);
+  dfsNumberCounter = 0;
+  printf("Bridges:\n");
+  for (int u = 0; u < V; ++u)
+    if (dfs_num[u] == UNVISITED) {
+      dfsRoot = u; rootChildren = 0;
+      articulationPointAndBridge(u);
+      articulation_vertex[dfsRoot] = (rootChildren > 1); // special case
+    }
+
+  printf("Articulation Points:\n");
+  for (int u = 0; u < V; ++u)
+    if (articulation_vertex[u])
+      printf(" Vertex %d\n", u);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<ii> vii;
+typedef vector<int> vi;
+
+enum { UNVISITED, EXPLORED, VISITED };           // three flags
+
+// these variables have to be global to be easily accessible by our recursion (other ways exist)
+vector<vii> AL;
+vi dfs_num; 
+vi dfs_parent;                                   // back vs bidirectional
+
+void cycleCheck(int u) {                         // check edge properties
+  dfs_num[u] = EXPLORED;                         // color u as EXPLORED
+  for (auto &[v, w] : AL[u]) {                   // C++17 style, w ignored
+    if (dfs_num[v] == UNVISITED) {               // EXPLORED->UNVISITED
+      dfs_parent[v] = u;                         // a tree edge u->v
+      cycleCheck(v);
+    }
+    else if (dfs_num[v] == EXPLORED) {           // EXPLORED->EXPLORED
+      if (v == dfs_parent[u])                    // differentiate them
+        printf(" Bidirectional Edge (%d, %d)-(%d, %d)\n", u, v, v, u);
+      else // the most frequent application: check if the graph is cyclic
+        printf("Back Edge (%d, %d) (Cycle)\n", u, v);
+    }
+    else if (dfs_num[v] == VISITED)              // EXPLORED->VISITED
+      printf("  Forward/Cross Edge (%d, %d)\n", u, v);
+  }
+  dfs_num[u] = VISITED;                          // color u as VISITED/DONE
+}
+
+int main() {
+  /*
+  // Undirected Graph in Figure 4.1
+  9
+  1 1 0
+  3 0 0 2 0 3 0
+  2 1 0 3 0
+  3 1 0 2 0 4 0
+  1 3 0
+  0
+  2 7 0 8 0
+  1 6 0
+  1 6 0
+  */
+
+  // freopen("dfs_cc_in.txt", "r", stdin);
+
+  /*
+  // Directed graph in Figure 4.9
+  8
+  1 1 0
+  1 3 0
+  1 1 0
+  2 2 0 4 0
+  1 5 0
+  1 7 0
+  1 4 0
+  1 6 0
+  */
+
+  freopen("scc_in.txt", "r", stdin);
+
+  int V; scanf("%d", &V);
+  AL.assign(V, vii());
+  for (int u = 0; u < V; ++u) {
+    int k; scanf("%d", &k);
+    while (k--) {
+      int v, w; scanf("%d %d", &v, &w);
+      AL[u].emplace_back(v, w);
+    }
+  }
+
+  printf("Graph Edges Property Check\n");
+  dfs_num.assign(V, UNVISITED);
+  dfs_parent.assign(V, -1);
+  for (int u = 0; u < V; ++u)
+    if (dfs_num[u] == UNVISITED)
+      cycleCheck(u);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<ii> vii;
+typedef vector<int> vi;
+
+enum { UNVISITED, VISITED };                     // basic flags
+
+// these variables have to be global to be easily accessible by our recursion (other ways exist)
+vector<vii> AL;
+vi dfs_num; 
+
+void dfs(int u) {                                // normal usage
+  printf(" %d", u);                              // this vertex is visited
+  dfs_num[u] = VISITED;                          // mark u as visited
+  for (auto &[v, w] : AL[u])                     // C++17 style, w ignored
+    if (dfs_num[v] == UNVISITED)                 // to avoid cycle
+      dfs(v);                                    // recursively visits v
+}
+
+int main() {
+  /*
+  // Undirected Graph in Figure 4.1
+  9
+  1 1 0
+  3 0 0 2 0 3 0
+  2 1 0 3 0
+  3 1 0 2 0 4 0
+  1 3 0
+  0
+  2 7 0 8 0
+  1 6 0
+  1 6 0
+  */
+
+  freopen("dfs_cc_in.txt", "r", stdin);
+
+  int V; scanf("%d", &V);
+  AL.assign(V, vii());
+  for (int u = 0; u < V; ++u) {
+    int k; scanf("%d", &k);
+    while (k--) {
+      int v, w; scanf("%d %d", &v, &w);
+      AL[u].emplace_back(v, w);
+    }
+  }
+
+  printf("Standard DFS Demo (the input graph must be UNDIRECTED)\n");
+  dfs_num.assign(V, UNVISITED);
+  int numCC = 0;
+  for (int u = 0; u < V; ++u)                    // for each u in [0..V-1]
+    if (dfs_num[u] == UNVISITED)                 // if that u is unvisited
+      printf("CC %d:", ++numCC), dfs(u), printf("\n"); // 3 lines here!
+  printf("There are %d connected components\n", numCC);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<ii> vii;
+typedef vector<int> vi;
+
+enum { UNVISITED, VISITED };                     // basic flags
+
+// these variables have to be global to be easily accessible by our recursion (other ways exist)
+vector<vii> AL;
+vi dfs_num; 
+vi ts;
+
+void toposort(int u) {
+  dfs_num[u] = VISITED;
+  for (auto &[v, w] : AL[u])
+    if (dfs_num[v] == UNVISITED)
+      toposort(v);
+  ts.push_back(u);                               // this is the only change
+}
+
+int main() {
+  /*
+  // Example of a Directed Acyclic Graph in Figure 4.4 (for toposort)
+  8
+  2 1 0 2 0
+  2 2 0 3 0
+  2 3 0 5 0
+  1 4 0
+  0
+  0
+  0
+  1 6 0
+  */
+
+  freopen("toposort_in.txt", "r", stdin);
+
+  int V; scanf("%d", &V);
+  AL.assign(V, vii());
+  for (int u = 0; u < V; ++u) {
+    int k; scanf("%d", &k);
+    while (k--) {
+      int v, w; scanf("%d %d", &v, &w);
+      AL[u].emplace_back(v, w);
+    }
+  }
+
+  // make sure that the given graph is DAG
+  printf("Topological Sort (the input graph must be DAG)\n");
+  dfs_num.assign(V, UNVISITED);                  // global variable
+  ts.clear();                                    // global variable
+  for (int u = 0; u < V; ++u)                    // same as finding CCs
+    if (dfs_num[u] == UNVISITED)
+      toposort(u);
+  reverse(ts.begin(), ts.end());                 // reverse ts or
+  for (auto &u : ts)                             // simply read the content
+    printf(" %d", u);                            // of ts backwards
+  printf("\n");
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef tuple<int, int, int> iii;
+typedef vector<int> vi;
+
+// UFDS code from ch2/ownlibrary/ufds.cpp
+// Union-Find Disjoint Sets Library written in OOP manner, using both path compression and union by rank heuristics
+class UnionFind {                                // OOP style
+private:
+  vi p, rank, setSize;                           // vi p is the key part
+  int numSets;
+public:
+  UnionFind(int N) {
+    p.assign(N, 0); for (int i = 0; i < N; ++i) p[i] = i;
+    rank.assign(N, 0);                           // optional speedup
+    setSize.assign(N, 1);                        // optional feature
+    numSets = N;                                 // optional feature
+  }
+  int findSet(int i) { return (p[i] == i) ? i : (p[i] = findSet(p[i])); }
+  bool isSameSet(int i, int j) { return findSet(i) == findSet(j); }
+  void unionSet(int i, int j) {
+    if (isSameSet(i, j)) return;                 // i and j are in same set
+    int x = findSet(i), y = findSet(j);          // find both rep items
+    if (rank[x] > rank[y]) swap(x, y);           // keep x 'shorter' than y
+    p[x] = y;                                    // set x under y
+    if (rank[x] == rank[y]) ++rank[y];           // optional speedup
+    setSize[y] += setSize[x];                    // combine set sizes at y
+    --numSets;                                   // a union reduces numSets
+  }
+  int numDisjointSets() { return numSets; }
+  int sizeOfSet(int i) { return setSize[findSet(i)]; }
+};
+
+int main() {
+  /*
+  // Graph in Figure 4.10 left, format: list of weighted edges
+  // This example shows another form of reading graph input
+  5 7
+  0 1 4
+  0 2 4
+  0 3 6
+  0 4 6
+  1 2 2
+  2 3 8
+  3 4 9
+  */
+
+  freopen("mst_in.txt", "r", stdin);
+
+  // Kruskal's algorithm
+  int V, E; scanf("%d %d", &V, &E);
+  vector<iii> EL(E);
+  for (int i = 0; i < E; ++i) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);  // read as (u, v, w)
+    EL[i] = {w, u, v};                           // reorder as (w, u, v)
+  }
+  sort(EL.begin(), EL.end());                    // sort by w, O(E log E)
+  // note: std::tuple has built-in comparison function
+
+  int mst_cost = 0, num_taken = 0;               // no edge has been taken
+  UnionFind UF(V);                               // all V are disjoint sets
+  // note: the runtime cost of UFDS is very light
+  for (int i = 0; i < E; ++i) {                  // up to O(E)
+    auto [w, u, v] = EL[i];                      // C++17 style
+    if (UF.isSameSet(u, v)) continue;            // already in the same CC
+    mst_cost += w;                               // add w of this edge
+    UF.unionSet(u, v);                           // link them
+    ++num_taken;                                 // 1 more edge is taken
+    if (num_taken == V-1) break;                 // optimization
+  }
+  // note: the number of disjoint sets must eventually be 1 for a valid MST
+  printf("MST cost = %d (Kruskal's)\n", mst_cost);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+typedef vector<ii> vii;
+
+vector<vii> AL;                                  // the graph stored in AL
+vi taken;                                        // to avoid cycle
+priority_queue<ii> pq;                           // to select shorter edges
+// C++ STL priority_queue is a max heap, we use -ve sign to reverse order
+
+void process(int u) { // set u as taken and enqueue neighbors of u
+  taken[u] = 1;
+  for (auto &[v, w] : AL[u])
+    if (!taken[v])
+      pq.push({-w, -v});                         // sort by non-dec weight
+}                                                // then by inc id
+
+int main() {
+  /*
+  // Graph in Figure 4.10 left, format: list of weighted edges
+  // This example shows another form of reading graph input
+  5 7
+  0 1 4
+  0 2 4
+  0 3 6
+  0 4 6
+  1 2 2
+  2 3 8
+  3 4 9
+  */
+
+  freopen("mst_in.txt", "r", stdin);
+
+// inside int main() --- assume the graph is stored in AL, pq is empty
+  int V, E; scanf("%d %d", &V, &E);
+  AL.assign(V, vii());
+  for (int i = 0; i < E; ++i) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);  // read as (u, v, w)
+    AL[u].emplace_back(v, w);
+    AL[v].emplace_back(u, w);
+  }
+  taken.assign(V, 0);                            // no vertex is taken
+  process(0);                                    // take+process vertex 0
+  int mst_cost = 0, num_taken = 0;               // no edge has been taken
+  while (!pq.empty()) {                          // up to O(E)
+    auto [w, u] = pq.top(); pq.pop();            // C++17 style
+    w = -w; u = -u;                              // negate to reverse order
+    if (taken[u]) continue;                      // already taken, skipped
+    mst_cost += w;                               // add w of this edge
+    process(u);                                  // take+process vertex u
+    ++num_taken;                                 // 1 more edge is taken
+    if (num_taken == V-1) break;                 // optimization
+  }
+  printf("MST cost = %d (Prim's)\n", mst_cost);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+typedef vector<ii> vii;
+
+const int INF = 1e9; // INF = 1B, not 2^31-1 to avoid overflow
+
+int main() {
+  /*
+  // Graph in Figure 4.18, has negative weight, but no negative cycle
+  5 5 0
+  0 1 1
+  0 2 10
+  1 3 2
+  2 3 -10
+  3 4 3
+
+  // Graph in Figure 4.19, negative cycle exists, Bellman Ford's can detect this
+  6 6 0
+  0 1 99
+  0 5 -99
+  1 2 15
+  2 3 0
+  3 1 -42
+  3 4 2
+  */
+
+  freopen("bellman_ford_in.txt", "r", stdin);
+
+  int V, E, s; scanf("%d %d %d", &V, &E, &s);
+  vector<vii> AL(V, vii());
+  while (E--) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);
+    AL[u].emplace_back(v, w);
+  }
+
+  // Bellman Ford's routine, basically = relax all E edges V-1 times
+  vi dist(V, INF); dist[s] = 0;                  // INF = 1e9 here
+  for (int i = 0; i < V-1; ++i) {                // total O(V*E)
+    bool modified = false;                       // optimization
+    for (int u = 0; u < V; ++u)                  // these two loops = O(E)
+      if (dist[u] != INF)                        // important check
+        for (auto &[v, w] : AL[u]) {             // C++17 style
+          if (dist[u]+w >= dist[v]) continue;    // not improving, skip
+          dist[v] = dist[u]+w;                   // relax operation
+          modified = true;                       // optimization
+        }
+    if (!modified) break;                        // optimization
+  }
+
+  bool hasNegativeCycle = false;
+  for (int u = 0; u < V; ++u)                    // one more pass to check
+    if (dist[u] != INF)
+      for (auto &[v, w] : AL[u])                 // C++17 style
+        if (dist[v] > dist[u]+w)                 // should be false
+          hasNegativeCycle = true;               // if true => -ve cycle
+  printf("Negative Cycle Exist? %s\n", hasNegativeCycle ? "Yes" : "No");
+
+  if (!hasNegativeCycle)
+    for (int u = 0; u < V; ++u)
+      printf("SSSP(%d, %d) = %d\n", s, u, dist[u]);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii; // In this chapter, we will frequently use these
+typedef vector<ii> vii; // three data type shortcuts. They may look cryptic
+typedef vector<int> vi; // but shortcuts are useful in competitive programming
+
+const int INF = 1e9; // INF = 1B, not 2^31-1 to avoid overflow
+
+vi p;                                            // addition:parent vector
+
+void printPath(int u) {                          // extract info from vi p
+  if (p[u] == -1) { printf("%d", u); return; }
+  printPath(p[u]);                               // output format: s -> ... -> t
+  printf(" %d", u);
+}
+
+int main() {
+  /*
+  // Graph in Figure 4.3, format: list of unweighted edges
+  // This example shows another form of reading graph input
+  13 16
+  0 1    1 2    2  3   0  4   1  5   2  6    3  7   5  6
+  4 8    8 9    5 10   6 11   7 12   9 10   10 11  11 12
+  */
+
+  freopen("bfs_in.txt", "r", stdin);
+
+  int V, E; scanf("%d %d", &V, &E);
+  vector<vii> AL(V, vii());
+  for (int i = 0; i < E; ++i) {
+    int a, b; scanf("%d %d", &a, &b);
+    AL[a].emplace_back(b, 0);
+    AL[b].emplace_back(a, 0);
+  }
+
+  // as an example, we start from this source, see Figure 4.3
+  int s = 5;
+
+  // BFS routine inside int main() -- we do not use recursion
+  vi dist(V, INF); dist[s] = 0;                  // INF = 1e9 here
+  queue<int> q; q.push(s);
+  p.assign(V, -1);                               // p is global
+
+  int layer = -1;                                // for output printing
+  bool isBipartite = true;                       // additional feature
+
+  while (!q.empty()) {
+    int u = q.front(); q.pop();
+    if (dist[u] != layer) printf("\nLayer %d: ", dist[u]);
+    layer = dist[u];
+    printf("visit %d, ", u);
+    for (auto &[v, w] : AL[u]) {                 // C++17 style, w ignored
+      if (dist[v] == INF) {
+        dist[v] = dist[u]+1;                     // dist[v] != INF now
+        p[v] = u;                                // parent of v is u
+        q.push(v);                               // for next iteration
+      }
+      else if ((dist[v]%2) == (dist[u]%2))       // same parity
+        isBipartite = false;
+    }
+  }
+
+  printf("\nShortest path: ");
+  printPath(7), printf("\n");
+  printf("isBipartite? %d\n", isBipartite);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+typedef vector<ii> vii;
+
+const int INF = 1e9; // INF = 1B, not 2^31-1 to avoid overflow
+
+int main() {
+  /*
+  // Graph in Figure 4.17
+  5 7 0
+  0 1 2
+  0 2 6
+  0 3 7
+  1 3 3
+  1 4 6
+  2 4 1
+  3 4 5
+  */
+
+  freopen("dijkstra_in.txt", "r", stdin);
+
+  int V, E, s; scanf("%d %d %d", &V, &E, &s);
+  vector<vii> AL(V, vii());
+  while (E--) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);
+    AL[u].emplace_back(v, w);                    // directed graph
+  }
+
+  vi dist(V, INF); dist[s] = 0;                  // INF = 1e9 here
+
+  // Original Dijkstra's algorithm
+  /*
+  set<ii> pq;                                    // balanced BST version
+  for (int u = 0; u < V; ++u)                    // dist[u] = INF
+    pq.insert({dist[u], u});                     // but dist[s] = 0
+
+  // sort the pairs by non-decreasing distance from s
+  while (!pq.empty()) {                          // main loop
+    auto [d, u] = *pq.begin();                   // shortest unvisited u
+    pq.erase(pq.begin());
+    for (auto &[v, w] : AL[u]) {                 // all edges from u
+      if (dist[u]+w >= dist[v]) continue;        // not improving, skip
+      pq.erase(pq.find({dist[v], v}));           // erase old pair
+      dist[v] = dist[u]+w;                       // relax operation
+      pq.insert({dist[v], v});                   // enqueue better pair
+    }
+  }
+  */
+
+  // (Modified) Dijkstra's algorithm
+  priority_queue<ii, vector<ii>, greater<ii>> pq; pq.push({0, s});
+
+  // sort the pairs by non-decreasing distance from s
+  while (!pq.empty()) {                          // main loop
+    auto [d, u] = pq.top(); pq.pop();            // shortest unvisited u
+    if (d > dist[u]) continue;                   // a very important check
+    for (auto &[v, w] : AL[u]) {                 // all edges from u
+      if (dist[u]+w >= dist[v]) continue;        // not improving, skip
+      dist[v] = dist[u]+w;                       // relax operation
+      pq.push({dist[v], v});                     // enqueue better pair
+    }
+  }
+
+  for (int u = 0; u < V; ++u)
+    printf("SSSP(%d, %d) = %d\n", s, u, dist[u]);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+typedef vector<ii> vii;
+
+const int INF = 1e9; // INF = 1B, not 2^31-1 to avoid overflow
+
+int main() {
+  /*
+  // Graph in Figure 4.18, has negative weight, but no negative cycle
+  5 5 0
+  0 1 1
+  0 2 10
+  1 3 2
+  2 3 -10
+  3 4 3
+
+  // Graph in Figure 4.19, negative cycle exists, SPFA will be trapped in an infinite loop/produces WA (stop only when overflow happens)
+  6 6 0
+  0 1 99
+  0 5 -99
+  1 2 15
+  2 3 0
+  3 1 -42
+  3 4 2
+  */
+
+  freopen("bellman_ford_in.txt", "r", stdin);
+
+  int V, E, s; scanf("%d %d %d", &V, &E, &s);
+  vector<vii> AL(V, vii());
+  while (E--) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);
+    AL[u].emplace_back(v, w);
+  }
+
+  // SPFA from source S
+  vi dist(V, INF); dist[s] = 0;                  // INF = 1e9 here
+  queue<int> q; q.push(s);                       // like BFS queue
+  vi in_queue(V, 0); in_queue[s] = 1;            // unique to SPFA
+  while (!q.empty()) {
+    int u = q.front(); q.pop(); in_queue[u] = 0; // pop from queue
+    for (auto &[v, w] : AL[u]) {                 // C++17 style
+      if (dist[u]+w >= dist[v]) continue;        // not improving, skip
+      dist[v] = dist[u]+w;                       // relax operation
+      if (!in_queue[v]) {                        // add to the queue
+        q.push(v);                               // only if v is not
+        in_queue[v] = 1;                         // already in the queue
+      }
+    }
+  }
+
+  for (int u = 0; u < V; ++u)
+    printf("SSSP(%d, %d) = %d\n", s, u, dist[u]);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+const int INF = 1e9; // INF = 1B, not 2^31-1 to avoid overflow
+const int MAX_V = 450; // if |V| > 450, you cannot use Floyd Washall's
+
+int AM[MAX_V][MAX_V]; // it is better to store a big array in the heap
+
+int main() {
+  /*
+  // Graph in Figure 4.30
+  5 9
+  0 1 2
+  0 2 1
+  0 4 3
+  1 3 4
+  2 1 1
+  2 4 1
+  3 0 1
+  3 2 3
+  3 4 5
+  */
+
+  freopen("floyd_warshall_in.txt", "r", stdin);
+
+  int V, E; scanf("%d %d", &V, &E);
+  for (int u = 0; u < V; ++u) {
+    for (int v = 0; v < V; ++v)
+      AM[u][v] = INF;
+    AM[u][u] = 0;
+  }
+
+  for (int i = 0; i < E; ++i) {
+    int u, v, w; scanf("%d %d %d", &u, &v, &w);
+    AM[u][v] = w;                                // directed graph
+  }
+
+  for (int k = 0; k < V; ++k)                    // loop order is k->u->v
+    for (int u = 0; u < V; ++u)
+      for (int v = 0; v < V; ++v)
+        AM[u][v] = min(AM[u][v], AM[u][k]+AM[k][v]);
+
+  for (int u = 0; u < V; ++u)
+    for (int v = 0; v < V; ++v)
+      printf("APSP(%d, %d) = %d\n", u, v, AM[u][v]);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+int N;
+vector<vi> AL;                                   // Directed graph
+
+vi hierholzer(int s) {
+  vi ans, idx(N, 0), st;
+  st.push_back(s);
+  while (!st.empty()) {
+    int u = st.back();
+    if (idx[u] < (int)AL[u].size()) {            // still has neighbor
+      st.push_back(AL[u][idx[u]]);
+      ++idx[u];
+    }
+    else {
+      ans.push_back(u);
+      st.pop_back();
+    }
+  }
+  reverse(ans.begin(), ans.end());
+  return ans;
+}
+
+int main() {
+  // The directed graph shown in Figure 4.39
+  N = 7;
+  AL.assign(N, vi());
+  AL[0].push_back(1); AL[0].push_back(6); // A->[B,G]
+  AL[1].push_back(2); // B->C
+  AL[2].push_back(3); AL[2].push_back(4); // C->[D,E]
+  AL[3].push_back(0); // D->A
+  AL[4].push_back(5); // E->F
+  AL[5].push_back(0); AL[5].push_back(2); // F->[A,C]
+  AL[6].push_back(5); // G->F
+  vi ans = hierholzer(0);
+  for (auto &u : ans)
+    cout << (char)('A'+u) << " ";
+  cout << endl;
+  return 0;  
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+
+vi match, vis;                                          // global variables
+vector<vi> AL;
+
+int Aug(int L) {      // return 1 if there exists an augmenting path from L
+  if (vis[L]) return 0;                               // return 0 otherwise
+  vis[L] = 1;
+  for (auto &R : AL[L])
+    if (match[R] == -1 || Aug(match[R])) {
+      match[R] = L;
+      return 1;                                         // found 1 matching
+    }
+  return 0;                                                  // no matching
+}
+
+bool isprime(int v) {
+  int primes[10] = {2,3,5,7,11,13,17,19,23,29};
+  for (int i = 0; i < 10; ++i)
+    if (primes[i] == v)
+      return true;
+  return false;
+}
+
+int main() {
+// inside int main()
+  // build bipartite graph with directed edge from left to right set
+
+/*
+  // Graph in Figure 4.40 can be built on the fly
+  // we know there are 6 vertices in this bipartite graph, left side are numbered 0,1,2, right side 3,4,5
+  int V = 6, Vleft = 3, set1[3] = {1,7,11}, set2[3] = {4,10,12};
+
+  // Graph in Figure 4.41 can be built on the fly
+  // we know there are 5 vertices in this bipartite graph, left side are numbered 0,1, right side 3,4,5
+  //int V = 5, Vleft = 2, set1[2] = {1,7}, set2[3] = {4,10,12};
+
+  // build the bipartite graph, only directed edge from left to right is needed
+  AL.assign(V, vi());
+  for (int i = 0; i < Vleft; ++i)
+    for (int j = 0; j < 3; ++j)
+      if (isprime(set1[i] + set2[j]))
+        AL[i].push_back(3 + j);
+*/
+
+  // For bipartite graph in Figure 4.44, V = 5, Vleft = 3 (vertex 0 unused)
+  // AL[0] = {} // dummy vertex, but you can choose to use this vertex
+  // AL[1] = {3, 4}
+  // AL[2] = {3}
+  // AL[3] = {}   // we use directed edges from left to right set only
+  // AL[4] = {}
+
+  int V = 5, Vleft = 3;                               // we ignore vertex 0
+  AL.assign(V, vi());
+  AL[1].push_back(3); AL[1].push_back(4);
+  AL[2].push_back(3);
+
+  // build unweighted bipartite graph with directed edge left->right set
+  unordered_set<int> freeV;
+  for (int L = 0; L < Vleft; ++L)
+    freeV.insert(L);  // assume all vertices on left set are free initially
+  match.assign(V, -1);    // V is the number of vertices in bipartite graph
+  int MCBM = 0;
+
+  // Greedy pre-processing for trivial Augmenting Paths
+  // try commenting versus un-commenting this for-loop
+  for (int L = 0; L < Vleft; ++L) {                               // O(V+E)
+    vi candidates;
+    for (auto &R : AL[L])
+      if (match[R] == -1)
+        candidates.push_back(R);
+    if (candidates.size() > 0) {
+      ++MCBM;
+      freeV.erase(L);              // L is matched, no longer a free vertex
+      int a = rand()%candidates.size();   // randomize this greedy matching
+      match[candidates[a]] = L;
+    }
+  }
+
+  for (auto &f : freeV) {      // for each of the k remaining free vertices
+    vis.assign(Vleft, 0);                    // reset before each recursion
+    MCBM += Aug(f);        // once f is matched, f remains matched till end
+  }
+  printf("Found %d matchings\n", MCBM);  // the answer is 2 for Figure 4.42
+
+  return 0;
+}
+
+```
+
+```cpp
+// Pseudo-Random Numbers
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+
+int Z, I, M, L;
+
+int f(int x) { return (Z*x + I) % M; }
+
+ii floydCycleFinding(int x0) {  // function int f(int x) is defined earlier
+  // 1st part: finding k*mu, hare's speed is 2x tortoise's
+  int tortoise = f(x0), hare = f(f(x0));    // f(x0) is the node next to x0
+  while (tortoise != hare) { tortoise = f(tortoise); hare = f(f(hare)); }
+  // 2nd part: finding mu, hare and tortoise move at the same speed
+  int mu = 0; hare = x0;
+  while (tortoise != hare) { tortoise = f(tortoise); hare = f(hare); mu++; }
+  // 3rd part: finding lambda, hare moves, tortoise stays
+  int lambda = 1; hare = f(tortoise);
+  while (tortoise != hare) { hare = f(hare); lambda++; }
+  return ii(mu, lambda);
+}
+
+int main() {
+  int caseNo = 1;
+  while (scanf("%d %d %d %d", &Z, &I, &M, &L), (Z || I || M || L)) {
+    ii result = floydCycleFinding(L);
+    printf("Case %d: %d\n", caseNo++, result.second);
+  }
+  return 0;
+}
+// Modular Fibonacci
+
+#include <cmath>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+
+typedef long long ll;
+ll MOD;
+
+#define MAX_N 2                                  // increase this if needed
+struct Matrix { ll mat[MAX_N][MAX_N]; };     // to let us return a 2D array
+
+Matrix matMul(Matrix a, Matrix b) {            // O(n^3), but O(1) as n = 2
+  Matrix ans; int i, j, k;
+  for (i = 0; i < MAX_N; i++)
+    for (j = 0; j < MAX_N; j++)
+      for (ans.mat[i][j] = k = 0; k < MAX_N; k++) {
+        ans.mat[i][j] += (a.mat[i][k] % MOD) * (b.mat[k][j] % MOD);
+        ans.mat[i][j] %= MOD;             // modulo arithmetic is used here
+      }
+  return ans;
+}
+
+Matrix matPow(Matrix base, int p) {  // O(n^3 log p), but O(log p) as n = 2
+  Matrix ans; int i, j;
+  for (i = 0; i < MAX_N; i++)
+    for (j = 0; j < MAX_N; j++)
+      ans.mat[i][j] = (i == j);                  // prepare identity matrix
+  while (p) {       // iterative version of Divide & Conquer exponentiation
+    if (p & 1)                    // check if p is odd (the last bit is on)
+      ans = matMul(ans, base);                                // update ans
+    base = matMul(base, base);                           // square the base
+    p >>= 1;                                               // divide p by 2
+  }
+  return ans;
+}
+
+int main() {
+  int i, n, m;
+
+  while (scanf("%d %d", &n, &m) == 2) {
+    Matrix ans;                            // special matrix for Fibonaccci
+    ans.mat[0][0] = 1;  ans.mat[0][1] = 1;
+    ans.mat[1][0] = 1;  ans.mat[1][1] = 0;
+    for (MOD = 1, i = 0; i < m; i++)                       // set MOD = 2^m
+      MOD *= 2;
+    ans = matPow(ans, n);                                       // O(log n) 
+    printf("%lld\n", ans.mat[0][1]);                      // this if fib(n)
+  }
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef vector<int> vi;
+typedef vector<ll> vll;
+typedef map<int, int> mii;
+
+ll _sieve_size;
+bitset<10000010> bs;                     // 10^7 should be enough for most cases
+vll primes;               // compact list of primes in form of vector<long long>
+
+
+// first part
+
+void sieve(ll upperbound) {          // create list of primes in [0..upperbound]
+  _sieve_size = upperbound+1;                     // add 1 to include upperbound
+  bs.set();                                                 // set all bits to 1
+  bs[0] = bs[1] = 0;                                     // except index 0 and 1
+  for (ll i = 2; i < _sieve_size; i++) if (bs[i]) {
+    // cross out multiples of i <= _sieve_size starting from i*i
+    for (ll j = i*i; j < _sieve_size; j += i) bs[j] = 0;
+    primes.push_back(i);       // also add this vector containing list of primes
+} }                                           // call this method in main method
+
+bool isPrime(ll N) {                 // a good enough deterministic prime tester
+  if (N < _sieve_size) return bs[N];                // now O(1) for small primes
+  for (int i = 0; (i < primes.size()) && (primes[i]*primes[i] <= N); i++)
+    if (N%primes[i] == 0) return false;
+  return true;                    // it takes longer time if N is a large prime!
+}                      // note: only work for N <= (last prime in vi "primes")^2
+
+// second part
+
+vi primeFactors(ll N) {   // remember: vi is vector of integers, ll is long long
+  vi factors;                    // vi `primes' (generated by sieve) is optional
+  ll PF_idx = 0, PF = primes[PF_idx];     // using PF = 2, 3, 4, ..., is also ok
+  while ((N != 1) && (PF*PF <= N)) {   // stop at sqrt(N), but N can get smaller
+    while (N%PF == 0) { N /= PF; factors.push_back(PF); }      // remove this PF
+    PF = primes[++PF_idx];                              // only consider primes!
+  }
+  if (N != 1) factors.push_back(N);     // special case if N is actually a prime
+  return factors;         // if pf exceeds 32-bit integer, you have to change vi
+}
+
+// third part
+
+ll numPF(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 0;
+  while (N != 1 && (PF*PF <= N)) {
+    while (N%PF == 0) { N /= PF; ans++; }
+    PF = primes[++PF_idx];
+  }
+  return ans + (N != 1);
+}
+
+ll numDiffPF(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 0;
+  while (N != 1 && (PF*PF <= N)) {
+    if (N%PF == 0) ans++;                             // count this pf only once
+    while (N%PF == 0) N /= PF;
+    PF = primes[++PF_idx];
+  }
+  return ans + (N != 1);
+}
+
+ll sumPF(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 0;
+  while (N != 1 && (PF*PF <= N)) {
+    while (N%PF == 0) { N /= PF; ans += PF; }
+    PF = primes[++PF_idx];
+  }
+  return ans + (N != 1) * N;
+}
+
+ll numDiv(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 1;             // start from ans = 1
+  while (N != 1 && (PF*PF <= N)) {
+    ll power = 0;                                             // count the power
+    while (N%PF == 0) { N /= PF; power++; }
+    ans *= (power+1);                                // according to the formula
+    PF = primes[++PF_idx];
+  }
+  return (N != 1) ? 2*ans : ans;    // (last factor has pow = 1, we add 1 to it)
+}
+
+ll sumDiv(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = 1;             // start from ans = 1
+  while (N != 1 && (PF*PF <= N)) {
+    ll power = 0;
+    while (N%PF == 0) { N /= PF; power++; }
+    ans *= ((ll)pow((double)PF, power+1.0) - 1) / (PF-1);             // formula
+    PF = primes[++PF_idx];
+  }
+  if (N != 1) ans *= ((ll)pow((double)N, 2.0) - 1) / (N-1);          // last one
+  return ans;
+}
+
+ll EulerPhi(ll N) {
+  ll PF_idx = 0, PF = primes[PF_idx], ans = N;             // start from ans = N
+  while (N != 1 && (PF * PF <= N)) {
+    if (N % PF == 0) ans -= ans / PF;                // only count unique factor
+    while (N % PF == 0) N /= PF;
+    PF = primes[++PF_idx];
+  }
+  return (N != 1) ? ans - ans/N : ans;                            // last factor
+}
+
+int main() {
+  // first part: the Sieve of Eratosthenes
+  sieve(10000000);                       // can go up to 10^7 (need few seconds)
+  printf("%lld\n", primes.back());            // last prime generated is 9999991
+  for (int i = 10000001; ; i++)
+    if (isPrime(i)) {
+      printf("The next prime beyond the last prime generated is %d\n", i);
+      break;
+    }
+  printf("%d\n", isPrime((1LL<<31)-1));  // 2^31-1 = 2147483647, 10-digits prime
+  printf("%d\n", isPrime(136117223861LL));        // not a prime, 104729*1299709
+
+
+  // second part: prime factors
+  vi r = primeFactors((1LL<<31)-1);   // slowest, 2^31-1 = 2147483647 is a prime
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  r = primeFactors(136117223861LL);    // slow, 2 large factors 104729 * 1299709
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  r = primeFactors(142391208960LL);    // faster, 2^10 * 3^4 * 5 * 7^4 * 11 * 13
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  r = primeFactors(99999820000081LL);             // this is the limit: 9999991^2
+  for (auto &pf : r) printf("> %d\n", pf);
+  printf("\n");
+
+  // r = primeFactors(100000380000361LL);                 // error, beyond 9999991^2
+  // for (auto &pf : r) printf("> %d\n", pf);
+  // printf("\n");
+  
+  // third part: prime factors variants
+  printf("numPF(%d) = %lld\n", 50, numPF(50)); // 2^1 * 5^2 => 3
+  printf("numDiffPF(%d) = %lld\n", 50, numDiffPF(50)); // 2^1 * 5^2 => 2
+  printf("sumPF(%d) = %lld\n", 50, sumPF(50)); // 2^1 * 5^2 => 2 + 5 + 5 = 12
+  printf("numDiv(%d) = %lld\n", 50, numDiv(50)); // 1, 2, 5, 10, 25, 50, 6 divisors
+  printf("sumDiv(%d) = %lld\n", 50, sumDiv(50)); // 1 + 2 + 5 + 10 + 25 + 50 = 93
+  printf("EulerPhi(%d) = %lld\n", 50, EulerPhi(50)); // 20 integers < 50 are relatively prime with 50
+  printf("\n");
+
+  // special cases when N is a prime number
+  printf("numPF(%d) = %lld\n", 7, numPF(7)); // 7^1 => 1
+  printf("numDiffPF(%d) = %lld\n", 7, numDiffPF(7)); // 7^1 = 1
+  printf("sumPF(%d) = %lld\n", 7, sumPF(7)); // 7^1 => 7
+  printf("numDiv(%d) = %lld\n", 7, numDiv(7)); // 1 and 7, 2 divisors
+  printf("sumDiv(%d) = %lld\n", 7, sumDiv(7)); // 1 + 7 = 8
+  printf("EulerPhi(%d) = %lld\n", 7, EulerPhi(7)); // 6 integers < 7 are relatively prime with prime number 7
+
+  return 0;
+}
+
+```
+
+```cpp
+//chap 6
+#include <bits/stdc++.h>
+using namespace std;
+
+int isvowel(char ch) { // make sure ch is in lowercase
+  char vowel[6] = "aeiou";
+  for (int j = 0; vowel[j]; j++)
+    if (vowel[j] == ch)
+      return 1;
+  return 0;
+}
+
+int main() {
+  int pos, digits, alphas, vowels, consonants;
+  char str[10010], *p;
+
+  freopen("basic_string_in.txt", "r", stdin);
+
+  strcpy(str, "");
+  bool first = true; // technique to differentiate first line with the other lines
+  bool prev_dash = false, this_dash = false; // to differentiate whether the previous line contains a dash or not
+  while (1) {
+    char line[110]; fgets(line, 100, stdin);
+    line[(int)strlen(line)-1] = 0; // delete dummy char
+    if (strncmp(line, ".......", 7) == 0) break;
+    if (line[(int)strlen(line)-1] == '-') {
+      line[(int)strlen(line)-1] = 0; // if the last character is '-', delete it by moving the NULL (0) one character forward
+      this_dash = true;
+    }
+    else
+      this_dash = false;
+    if (!first && !prev_dash)
+      strcat(str, " "); // only append " " if this line is the second one onwards
+    first = false;
+    strcat(str, line);
+    prev_dash = this_dash;
+  }
+
+  for (int i = digits = alphas = vowels = consonants = 0; str[i]; i++) { // we can use str[i] as terminating condition as string in C++ is also terminated with NULL (0)
+    str[i] = tolower(str[i]); // make each character lower case
+    digits += isdigit(str[i]) ? 1 : 0;
+    alphas += isalpha(str[i]) ? 1 : 0;
+    vowels += isvowel(str[i]); // already returns 1 or 0
+  }
+  consonants = alphas-vowels;
+  printf("%s\n", str);
+  printf("%d %d %d\n", digits, vowels, consonants);
+
+  vector<string> tokens;
+  map<string, int> freq;
+  for (p = strtok(str, " ."); p; p = strtok(NULL, " .")) {
+    tokens.push_back(p); // casting from C string to C++ string is automatic
+    freq[p]++;
+  }
+
+  sort(tokens.begin(), tokens.end());
+  printf("%s %s\n", tokens[0].c_str(), tokens[(int)tokens.size()-1].c_str()); // to cast C++ string to C string, we need to use c_str()
+
+  int hascs3233 = (strstr(str, "cs3233") != NULL);
+  printf("%d\n", hascs3233);
+
+  int ans_s = 0, ans_h = 0, ans_7 = 0;
+  char ch;
+  while (scanf("%c", &ch), ch != '\n') {
+         if (ch == 's') ans_s++;
+    else if (ch == 'h') ans_h++;
+    else if (ch == '7') ans_7++;
+  }
+  printf("%d %d %d\n", ans_s, ans_h, ans_7);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_N = 100010;
+
+char T[MAX_N], P[MAX_N];                         // T = text, P = pattern
+int n, m;                                        // n = |T|, m = |P|
+int b[MAX_N], n, m;                              // b = back table
+
+void naiveMatching() {
+  for (int i = 0; i < n; ++i) {                  // try all starting index
+    bool found = true;
+    for (int j = 0; (j < m) && found; ++j)
+      if ((i+j >= n) || (P[j] != T[i+j]))        // if mismatch found
+        found = false;                           // abort this, try i+1
+    if (found)                                   // T[i..i+m-1] = P[0..m-1]
+      printf("P is found at index %d in T\n", i);
+  }
+}
+
+void kmpPreprocess() {                           // call this first
+  int i = 0, j = -1; b[0] = -1;                  // starting values
+  while (i < m) {                                // pre-process P
+    while ((j >= 0) && (P[i] != P[j])) j = b[j]; // different, reset j
+    ++i; ++j;                                    // same, advance both
+    b[i] = j;
+  }
+}
+
+void kmpSearch() {                               // similar as above
+  int i = 0, j = 0;                              // starting values
+  while (i < n) {                                // search through T
+    while ((j >= 0) && (T[i] != P[j])) j = b[j]; // if different, reset j
+    ++i; ++j;                                    // if same, advance both
+    if (j == m) {                                // a match is found
+      printf("P is found at index %d in T\n", i-j);
+      j = b[j];                                  // prepare j for the next
+    }
+  }
+}
+
+int main() {
+  strcpy(T, "I DO NOT LIKE SEVENTY SEV BUT SEVENTY SEVENTY SEVEN");
+  strcpy(P, "SEVENTY SEVEN");
+  n = (int)strlen(T);
+  m = (int)strlen(P);
+
+  //if the end of line character is read too, uncomment the line below
+  //T[n-1] = 0; n--; P[m-1] = 0; m--;
+
+  printf("T = '%s'\n", T);
+  printf("P = '%s'\n", P);
+  printf("\n");
+
+  clock_t t0 = clock();
+  printf("Naive Matching\n");
+  naiveMatching();
+  clock_t t1 = clock();
+  printf("Runtime = %.10lf s\n\n", (t1 - t0) / (double) CLOCKS_PER_SEC);
+
+  printf("KMP\n");
+  kmpPreprocess();
+  kmpSearch();
+  clock_t t2 = clock();
+  printf("Runtime = %.10lf s\n\n", (t2 - t1) / (double) CLOCKS_PER_SEC);
+
+  printf("String Library\n");
+  char *pos = strstr(T, P);
+  while (pos != NULL) {
+    printf("P is found at index %d in T\n", pos - T);
+    pos = strstr(pos + 1, P);
+  }
+  clock_t t3 = clock();
+  printf("Runtime = %.10lf s\n\n", (t3 - t2) / (double) CLOCKS_PER_SEC);
+
+  return 0;
+}
+
+/*
+Sample extreme test case.
+The first line is T, the second line is P
+
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB
+
+*/
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+typedef long long ll;
+
+const int p = 131;                               // p and M are
+const int M = 1e9+7;                             // relatively prime
+
+vi P;                                            // to store p^i % M
+vi h;                                            // to store prefix hashes
+
+vi prepareP(int n) {                             // compute p^i % M
+  P.assign(n, 0);
+  P[0] = 1;
+  for (int i = 1; i < n; ++i)                    // O(n)
+    P[i] = ((ll)P[i-1]*p) % M;
+  return P;
+}
+
+char convert(char ch) {
+  // return ch-'A';                              // 'A'->0..'Z'->25
+  return ch;                                     // 'A'->65..'Z'->90
+}
+
+int hash_slow(string T) {                        // Overall: O(n)
+  int ans = 0;
+  for (int i = 0; i < (int)T.length(); ++i)      // O(n)
+    ans += ((ll)convert(T[i])*P[i]) % M;
+  return ans;
+}
+
+vi computeRollingHash(string T) {                // Overall: O(n)
+  vi P = prepareP((int)T.length());              // O(n)
+  vi h(T.size(), 0);
+  for (int i = 0; i < (int)T.length(); ++i) {    // O(n)
+    if (i != 0) h[i] = h[i-1];                   // rolling hash
+    h[i] = (h[i] + ((ll)T[i]*P[i]) % M) % M;
+  }
+  return h;
+}
+
+int extEuclid(int a, int b, int &x, int &y) {    // pass x and y by ref
+  int xx = y = 0;
+  int yy = x = 1;
+  while (b) {                                    // repeats until b == 0
+    int q = a/b;
+    int t = b; b = a%b; a = t;
+    t = xx; xx = x-q*xx; x = t;
+    t = yy; yy = y-q*yy; y = t;
+  }
+  return a;                                      // returns gcd(a, b)
+}
+
+int modInverse(int b, int m) {                   // returns b^(-1) (mod m)
+  int x, y;
+  int d = extEuclid(b, m, x, y);                 // to get b*x + m*y == d
+  if (d != 1) return -1;                         // to indicate failure
+  // b*x + m*y == 1, now apply (mod m) to get b*x == 1 (mod m)
+  return (x+m)%m;                                // this is the answer
+}
+
+int hash_fast(int L, int R) {                    // O(1) hash of any substr
+  if (L == 0) return h[R];                       // h is the prefix hashes
+  int ans = 0;
+  ans = ((h[R] - h[L-1]) % M + M) % M;           // compute differences
+  ans = ((ll)ans * modInverse(P[L], M)) % M;     // remove P[L]^-1 (mod M)
+  return ans;
+}
+
+int main() {
+  string T = "ABCBC";
+  int n = (int)T.length();
+
+  P = prepareP(n);
+  cout << hash_slow(T) << "\n";                  // O(n) computation
+
+  h = computeRollingHash(T);                     // using Rolling Hash
+  cout << hash_fast(0, n-1) << "\n";             // O(1) computation
+
+  for (int i = 0; i < n; ++i)                    // all pairs must match
+    for (int j = i; j < n; ++j)
+      assert(hash_slow(T.substr(i, j-i+1)) == hash_fast(i, j));
+
+  // Rabin Karp's String Matching algorithm
+  string P = "BC";                               // should be 1 and 3
+  int m = (int)P.length();
+  int hP = hash_slow(P);                         // O(n), doesn't matter
+  cout << P << " is found at indices:";
+  for (int i = 0; i <= n-m; ++i)                 // try all starting pos
+    if (hash_fast(i, i+m-1) == hP)               // a possible match
+      cout << " " << i;
+  cout << "\n";
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef pair<int, int> ii;
+typedef vector<int> vi;
+
+class SuffixArray {
+private:
+  vi RA;                                         // rank array
+
+  void countingSort(int k) {                     // O(n)
+    int maxi = max(300, n);                      // up to 255 ASCII chars
+    vi c(maxi, 0);                               // clear frequency table
+    for (int i = 0; i < n; ++i)                  // count the frequency
+      ++c[i+k < n ? RA[i+k] : 0];                // of each integer rank
+    for (int i = 0, sum = 0; i < maxi; ++i) {
+      int t = c[i]; c[i] = sum; sum += t;
+    }
+    vi tempSA(n);
+    for (int i = 0; i < n; ++i)                  // sort SA
+      tempSA[c[SA[i]+k < n ? RA[SA[i]+k] : 0]++] = SA[i];
+    swap(SA, tempSA);                            // update SA
+  }
+
+  void constructSA() {                           // can go up to 400K chars
+    SA.resize(n);
+    iota(SA.begin(), SA.end(), 0);               // the initial SA
+    RA.resize(n);
+    for (int i = 0; i < n; ++i) RA[i] = T[i];    // initial rankings
+    for (int k = 1; k < n; k <<= 1) {            // repeat log_2 n times
+      // this is actually radix sort: sort based on the second item
+      // and then (stable) sort based on the first item
+      countingSort(k);                             
+      countingSort(0);
+      vi tempRA(n);
+      int r = 0;
+      tempRA[SA[0]] = r;                         // re-ranking process
+      for (int i = 1; i < n; ++i)                // compare adj suffixes
+        tempRA[SA[i]] = // same pair => same rank r; otherwise, increase r
+          ((RA[SA[i]] == RA[SA[i-1]]) && (RA[SA[i]+k] == RA[SA[i-1]+k])) ?
+            r : ++r;
+      swap(RA, tempRA);                          // update RA
+      if (RA[SA[n-1]] == n-1) break;             // nice optimization
+    }
+  }
+
+  void computeLCP() {
+    vi Phi(n);
+    vi PLCP(n);
+    PLCP.resize(n);
+    Phi[SA[0]] = -1;                             // default value
+    for (int i = 1; i < n; ++i)                  // compute Phi in O(n)
+      Phi[SA[i]] = SA[i-1];                      // remember prev suffix
+    for (int i = 0, L = 0; i < n; ++i) {         // compute PLCP in O(n)
+      if (Phi[i] == -1) { PLCP[i] = 0; continue; } // special case
+      while (T[i+L] == T[Phi[i]+L]) ++L;         // L incr max n times
+      PLCP[i] = L;
+      L = max(L-1, 0);                           // L dec max n times
+    }
+    LCP.resize(n);
+    for (int i = 0; i < n; ++i)                  // compute LCP in O(n)
+      LCP[i] = PLCP[SA[i]];                      // restore PLCP
+  }
+
+public:
+  const char* T;                                 // the input string
+  const int n;                                   // the length of T
+  vi SA;                                         // Suffix Array
+  vi LCP;                                        // of adj sorted suffixes
+
+  SuffixArray(const char* _T, const int _n) : T(_T), n(_n) {
+    constructSA();                               // O(n log n)
+    computeLCP();                                // O(n)
+  }
+
+  ii stringMatching(const char *P) {             // in O(m log n)
+    int m = (int)strlen(P);                      // usually, m < n
+    int lo = 0, hi = n-1;                        // range = [0..n-1]
+    while (lo < hi) {                            // find lower bound
+      int mid = (lo+hi) / 2;                     // this is round down
+      int res = strncmp(T+SA[mid], P, m);        // P in suffix SA[mid]?
+      (res >= 0) ? hi = mid : lo = mid+1;        // notice the >= sign
+    }
+    if (strncmp(T+SA[lo], P, m) != 0) return {-1, -1}; // if not found
+    ii ans; ans.first = lo;
+    hi = n-1;                                    // range = [lo..n-1]
+    while (lo < hi) {                            // now find upper bound
+      int mid = (lo+hi) / 2;
+      int res = strncmp(T+SA[mid], P, m);
+      (res > 0) ? hi = mid : lo = mid+1;         // notice the > sign
+    }
+    if (strncmp(T+SA[hi], P, m) != 0) --hi;      // special case
+    ans.second = hi;
+    return ans;                                  // returns (lb, ub)
+  }                                              // where P is found
+
+  ii LRS() {                                     // (LRS length, index)
+    int idx = 0, maxLCP = -1;
+    for (int i = 1; i < n; ++i)                  // O(n), start from i = 1
+      if (LCP[i] > maxLCP)
+        maxLCP = LCP[i], idx = i;
+    return {maxLCP, idx};
+  }
+
+  ii LCS(int split_idx) {                        // (LCS length, index)
+    int idx = 0, maxLCP = -1;
+    for (int i = 1; i < n; ++i) {                // O(n), start from i = 1
+      // if suffix SA[i] and suffix SA[i-1] came from the same string, skip
+      if ((SA[i] < split_idx) == (SA[i-1] < split_idx)) continue;
+      if (LCP[i] > maxLCP)
+        maxLCP = LCP[i], idx = i;
+    }
+    return {maxLCP, idx};
+  }
+};
+
+const int MAX_N = 200010;                        // can go up to 400K chars
+
+char T[MAX_N];
+char P[MAX_N];
+char LRS_ans[MAX_N];
+char LCS_ans[MAX_N];
+
+int main() {
+  freopen("sa_lcp_in.txt", "r", stdin);
+  scanf("%s", &T);                               // read T
+  int n = (int)strlen(T);                        // count n
+  T[n++] = '$';                                  // add terminating symbol
+  SuffixArray S(T, n);                           // construct SA+LCP
+
+  printf("T = '%s'\n", T);
+  printf(" i SA[i] LCP[i]   Suffix SA[i]\n");
+  for (int i = 0; i < n; ++i)
+    printf("%2d    %2d    %2d    %s\n", i, S.SA[i], S.LCP[i], T+S.SA[i]);
+
+  // String Matching demo, we will try to find P in T
+  strcpy(P, "A");
+  auto [lb, ub] = S.stringMatching(P);
+  if ((lb != -1) && (ub != -1)) {
+    printf("P = '%s' is found SA[%d..%d] of T = '%s'\n", P, lb, ub, T);
+    printf("They are:\n");
+    for (int i = lb; i <= ub; ++i)
+      printf("  %s\n", T+S.SA[i]);
+  }
+  else
+    printf("P = '%s' is not found in T = '%s'\n", P, T);
+
+  // LRS demo, find the LRS of T
+  auto [LRS_len, LRS_idx] = S.LRS();
+  strncpy(LRS_ans, T+S.SA[LRS_idx], LRS_len);
+  printf("The LRS is '%s' with length = %d\n", LRS_ans, LRS_len);
+
+  // LCS demo, find the LCS of (T, P)
+  strcpy(P, "CATA");
+  int m = (int)strlen(P);
+  strcat(T, P);                                  // append P to T
+  strcat(T, "#");                                // add '#' at the back
+  n = (int)strlen(T);                            // update n
+
+  // reconstruct SA of the combined strings
+  SuffixArray S2(T, n);                          // reconstruct SA+LCP
+  int split_idx = n-m-1;
+  printf("T+P = '%s'\n", T);
+  printf(" i SA[i] LCP[i] From  Suffix SA[i]\n");
+  for (int i = 0; i < n; ++i)
+    printf("%2d    %2d    %2d    %2d    %s\n", 
+      i, S2.SA[i], S2.LCP[i], S2.SA[i] < split_idx ? 1 : 2, T+S2.SA[i]);
+
+  auto [LCS_len, LCS_idx] = S2.LCS(split_idx);
+  strncpy(LCS_ans, T+S2.SA[LCS_idx], LCS_len);
+  printf("The LCS is '%s' with length = %d\n", LCS_ans, LCS_len);
+  
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef vector<int> vi;
+
+const int MAX_N = 2510;                          // O(n^2 log n)
+
+char T[MAX_N];                                   // up to 2500 chars
+
+int main() {
+  freopen("sa_lcp_in.txt", "r", stdin);
+  scanf("%s", &T);                               // read T
+  int n = (int)strlen(T);                        // count n
+  T[n++] = '$';                                  // add terminating symbol
+
+  vi SA(n);
+  iota(SA.begin(), SA.end(), 0);                 // the initial SA
+  // analysis of this sort below: O(n log n) * cmp: O(n) = O(n^2 log n)
+  sort(SA.begin(), SA.end(), [](int a, int b) {  // O(n^2 log n)
+    return strcmp(T+a, T+b) < 0;
+  });
+
+  vi LCP(n);
+  LCP[0] = 0;                                    // default value
+  for (int i = 1; i < n; ++i) {                  // compute by def, O(n^2)
+    int L = 0;                                   // always reset L to 0
+    while (T[SA[i]+L] == T[SA[i-1]+L]) ++L;      // same L-th char, ++L
+    LCP[i] = L;
+  }
+
+  printf("T = '%s'\n", T);
+  printf(" i SA[i] LCP[i]   Suffix SA[i]\n");
+  for (int i = 0; i < n; ++i)
+    printf("%2d    %2d    %2d    %s\n", i, SA[i], LCP[i], T+SA[i]);
+
+  return 0;
+}
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+
+int main() {
+  char A[20] = "ACAATCC", B[20] = "AGCATGC";
+  int n = (int)strlen(A), m = (int)strlen(B);
+  int i, j, table[20][20]; // Needleman Wunsnch's algorithm
+
+  memset(table, 0, sizeof table);
+  // insert/delete = -1 point
+  for (i = 1; i <= n; i++)
+    table[i][0] = i * -1;
+  for (j = 1; j <= m; j++)
+    table[0][j] = j * -1;
+
+  for (i = 1; i <= n; i++)
+    for (j = 1; j <= m; j++) {
+      // match = 2 points, mismatch = -1 point
+      table[i][j] = table[i - 1][j - 1] + (A[i - 1] == B[j - 1] ? 2 : -1); // cost for match or mismatches
+      // insert/delete = -1 point
+      table[i][j] = max(table[i][j], table[i - 1][j] - 1); // delete
+      table[i][j] = max(table[i][j], table[i][j - 1] - 1); // insert
+    }
+
+  printf("DP table:\n");
+  for (i = 0; i <= n; i++) {
+    for (j = 0; j <= m; j++)
+      printf("%3d", table[i][j]);
+    printf("\n");
+  }
+  printf("Maximum Alignment Score: %d\n", table[n][m]);
+
+  return 0;
+}
+
+```
+
+```cpp
+//chap 7
+#include <bits/stdc++.h>
+using namespace std;
+
+#define INF 1e9
+#define EPS 1e-9
+#define PI acos(-1.0)
+
+double DEG_to_RAD(double d) { return d * PI / 180.0; }
+
+double RAD_to_DEG(double r) { return r * 180.0 / PI; }
+
+struct point_i { int x, y;     // whenever possible, work with point_i
+  point_i() { x = y = 0; }                      // default constructor
+  point_i(int _x, int _y) : x(_x), y(_y) {} };          // constructor
+
+struct point { double x, y;   // only used if more precision is needed
+  point() { x = y = 0.0; }                      // default constructor
+  point(double _x, double _y) : x(_x), y(_y) {} };      // constructor
+
+int insideCircle(point_i p, point_i c, int r) { // all integer version
+  int dx = p.x - c.x, dy = p.y - c.y;
+  int Euc = dx * dx + dy * dy, rSq = r * r;             // all integer
+  return Euc < rSq ? 0 : Euc == rSq ? 1 : 2; } //inside/border/outside
+
+bool circle2PtsRad(point p1, point p2, double r, point &c) {
+  double d2 = (p1.x - p2.x) * (p1.x - p2.x) + 
+              (p1.y - p2.y) * (p1.y - p2.y);
+  double det = r * r / d2 - 0.25;
+  if (det < 0.0) return false;
+  double h = sqrt(det);
+  c.x = (p1.x + p2.x) * 0.5 + (p1.y - p2.y) * h;
+  c.y = (p1.y + p2.y) * 0.5 + (p2.x - p1.x) * h;
+  return true; }         // to get the other center, reverse p1 and p2
+
+int main() {
+  // circle equation, inside, border, outside
+  point_i pt(2, 2);
+  int r = 7;
+  point_i inside(8, 2);
+  printf("%d\n", insideCircle(inside, pt, r));             // 0-inside
+  point_i border(9, 2);
+  printf("%d\n", insideCircle(border, pt, r));          // 1-at border
+  point_i outside(10, 2);
+  printf("%d\n", insideCircle(outside, pt, r));           // 2-outside
+
+  double d = 2 * r;
+  printf("Diameter = %.2lf\n", d);
+  double c = PI * d;
+  printf("Circumference (Perimeter) = %.2lf\n", c);
+  double A = PI * r * r;
+  printf("Area of circle = %.2lf\n", A);
+
+  printf("Length of arc   (central angle = 60 degrees) = %.2lf\n", 60.0 / 360.0 * c);
+  printf("Length of chord (central angle = 60 degrees) = %.2lf\n", sqrt((2 * r * r) * (1 - cos(DEG_to_RAD(60.0)))));
+  printf("Area of sector  (central angle = 60 degrees) = %.2lf\n", 60.0 / 360.0 * A);
+
+  point p1;
+  point p2(0.0, -1.0);
+  point ans;
+  circle2PtsRad(p1, p2, 2.0, ans);
+  printf("One of the center is (%.2lf, %.2lf)\n", ans.x, ans.y);
+  circle2PtsRad(p2, p1, 2.0, ans);     // we simply reverse p1 with p2
+  printf("The other center  is (%.2lf, %.2lf)\n", ans.x, ans.y);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+#define INF 1e9
+#define EPS 1e-9
+#define PI acos(-1.0) // important constant; alternative #define PI (2.0 * acos(0.0))
+
+double DEG_to_RAD(double d) { return d*PI / 180.0; }
+
+double RAD_to_DEG(double r) { return r*180.0 / PI; }
+
+// struct point_i { int x, y; };    // basic raw form, minimalist mode
+struct point_i { int x, y;     // whenever possible, work with point_i
+  point_i() { x = y = 0; }                      // default constructor
+  point_i(int _x, int _y) : x(_x), y(_y) {} };         // user-defined
+
+struct point { double x, y;   // only used if more precision is needed
+  point() { x = y = 0.0; }                      // default constructor
+  point(double _x, double _y) : x(_x), y(_y) {}        // user-defined
+  bool operator < (point other) const { // override less than operator
+    if (fabs(x-other.x) > EPS)                   // useful for sorting
+      return x < other.x;          // first criteria , by x-coordinate
+    return y < other.y; }          // second criteria, by y-coordinate
+  // use EPS (1e-9) when testing equality of two floating points
+  bool operator == (point other) const {
+   return (fabs(x-other.x) < EPS && (fabs(y-other.y) < EPS)); } };
+
+double dist(point p1, point p2) {                // Euclidean distance
+                      // hypot(dx, dy) returns sqrt(dx * dx + dy * dy)
+  return hypot(p1.x-p2.x, p1.y-p2.y); }               // return double
+
+// rotate p by theta degrees CCW w.r.t origin (0, 0)
+point rotate(point p, double theta) {
+  double rad = DEG_to_RAD(theta);    // multiply theta with PI / 180.0
+  return point(p.x * cos(rad) - p.y*sin(rad),
+               p.x * sin(rad) + p.y*cos(rad)); }
+
+struct line { double a, b, c; };          // a way to represent a line
+
+// the answer is stored in the third parameter (pass by reference)
+void pointsToLine(point p1, point p2, line &l) {
+  if (fabs(p1.x-p2.x) < EPS)                  // vertical line is fine
+    l = {1.0, 0.0, -p1.x};                           // default values
+  else {
+    double a = -(double)(p1.y-p2.y) / (p1.x-p2.x);
+    l = {a,
+         1.0,              // IMPORTANT: we fix the value of b to 1.0
+         -(double)(a*p1.x) - p1.y}; }
+  }
+// not needed since we will use the more robust form: ax + by + c = 0
+struct line2 { double m, c; };      // another way to represent a line
+
+int pointsToLine2(point p1, point p2, line2 &l) {
+ if (abs(p1.x-p2.x) < EPS) {            // special case: vertical line
+   l.m = INF;                    // l contains m = INF and c = x_value
+   l.c = p1.x;                  // to denote vertical line x = x_value
+   return 0;   // we need this return variable to differentiate result
+ }
+ else {
+   l.m = (double)(p1.y-p2.y) / (p1.x-p2.x);
+   l.c = p1.y - l.m*p1.x;
+   return 1;     // l contains m and c of the line equation y = mx + c
+} }
+
+bool areParallel(line l1, line l2) {       // check coefficients a & b
+  return (fabs(l1.a-l2.a) < EPS) && (fabs(l1.b-l2.b) < EPS); }
+
+bool areSame(line l1, line l2) {           // also check coefficient c
+  return areParallel(l1 ,l2) && (fabs(l1.c-l2.c) < EPS); }
+
+// returns true (+ intersection point) if two lines are intersect
+bool areIntersect(line l1, line l2, point &p) {
+  if (areParallel(l1, l2)) return false;            // no intersection
+  // solve system of 2 linear algebraic equations with 2 unknowns
+  p.x = (l2.b*l1.c - l1.b*l2.c) / (l2.a*l1.b - l1.a*l2.b);
+  // special case: test for vertical line to avoid division by zero
+  if (fabs(l1.b) > EPS) p.y = -(l1.a*p.x + l1.c);
+  else                  p.y = -(l2.a*p.x + l2.c);
+  return true; }
+
+struct vec { double x, y;  // name: `vec' is different from STL vector
+  vec(double _x, double _y) : x(_x), y(_y) {} };
+
+vec toVec(point a, point b) {       // convert 2 points to vector a->b
+  return vec(b.x-a.x, b.y-a.y); }
+
+vec scale(vec v, double s) {        // nonnegative s = [<1 .. 1 .. >1]
+  return vec(v.x*s, v.y*s); }                   // shorter.same.longer
+
+point translate(point p, vec v) {        // translate p according to v
+  return point(p.x+v.x, p.y+v.y); }
+
+// convert point and gradient/slope to line
+void pointSlopeToLine(point p, double m, line &l) {
+  l.a = -m;                                               // always -m
+  l.b = 1;                                                 // always 1
+  l.c = -((l.a*p.x) + (l.b*p.y)); }                    // compute this
+
+void closestPoint(line l, point p, point &ans) {
+  line perpendicular;         // perpendicular to l and pass through p
+  if (fabs(l.b) < EPS) {              // special case 1: vertical line
+    ans.x = -(l.c);   ans.y = p.y;      return; }
+
+  if (fabs(l.a) < EPS) {            // special case 2: horizontal line
+    ans.x = p.x;      ans.y = -(l.c);   return; }
+
+  pointSlopeToLine(p, 1/l.a, perpendicular);            // normal line
+  // intersect line l with this perpendicular line
+  // the intersection point is the closest point
+  areIntersect(l, perpendicular, ans); }
+
+// returns the reflection of point on a line
+void reflectionPoint(line l, point p, point &ans) {
+  point b;
+  closestPoint(l, p, b);                     // similar to distToLine
+  vec v = toVec(p, b);                             // create a vector
+  ans = translate(translate(p, v), v); }         // translate p twice
+
+// returns the dot product of two vectors a and b
+double dot(vec a, vec b) { return (a.x*b.x + a.y*b.y); }
+
+// returns the squared value of the normalized vector
+double norm_sq(vec v) { return v.x*v.x + v.y*v.y; }
+
+// returns the distance from p to the line defined by
+// two points a and b (a and b must be different)
+// the closest point is stored in the 4th parameter (byref)
+double distToLine(point p, point a, point b, point &c) {
+  // formula: c = a + u*ab
+  vec ap = toVec(a, p), ab = toVec(a, b);
+  double u = dot(ap, ab) / norm_sq(ab);
+  c = translate(a, scale(ab, u));                  // translate a to c
+  return dist(p, c); }           // Euclidean distance between p and c
+
+// returns the distance from p to the line segment ab defined by
+// two points a and b (still OK if a == b)
+// the closest point is stored in the 4th parameter (byref)
+double distToLineSegment(point p, point a, point b, point &c) {
+  vec ap = toVec(a, p), ab = toVec(a, b);
+  double u = dot(ap, ab) / norm_sq(ab);
+  if (u < 0.0) { c = point(a.x, a.y);                   // closer to a
+    return dist(p, a); }         // Euclidean distance between p and a
+  if (u > 1.0) { c = point(b.x, b.y);                   // closer to b
+    return dist(p, b); }         // Euclidean distance between p and b
+  return distToLine(p, a, b, c); }          // run distToLine as above
+
+double angle(point a, point o, point b) {  // returns angle aob in rad
+  vec oa = toVec(o, a), ob = toVec(o, b);
+  return acos(dot(oa, ob) / sqrt(norm_sq(oa)*norm_sq(ob))); }
+
+// returns the cross product of two vectors a and b
+double cross(vec a, vec b) { return a.x*b.y - a.y*b.x; }
+
+//// another variant
+// returns 'twice' the area of this triangle A-B-c
+// int area2(point p, point q, point r) {
+//   return p.x * q.y - p.y * q.x +
+//          q.x * r.y - q.y * r.x +
+//          r.x * p.y - r.y * p.x;
+// }
+
+// note: to accept collinear points, we have to change the `> 0'
+// returns true if point r is on the left side of line pq
+bool ccw(point p, point q, point r) {
+  return cross(toVec(p, q), toVec(p, r)) > -EPS; }
+
+// returns true if point r is on the same line as the line pq
+bool collinear(point p, point q, point r) {
+  return fabs(cross(toVec(p, q), toVec(p, r))) < EPS; }
+
+int main() {
+  point P1, P2, P3(0, 1); // note that both P1 and P2 are (0.00, 0.00)
+  printf("%d\n", P1 == P2);                                    // true
+  printf("%d\n", P1 == P3);                                   // false
+
+  vector<point> P;
+  P.push_back(point(2, 2));
+  P.push_back(point(4, 3));
+  P.push_back(point(2, 4));
+  P.push_back(point(6, 6));
+  P.push_back(point(2, 6));
+  P.push_back(point(6, 5));
+
+  // sorting points demo
+  sort(P.begin(), P.end());
+  for (int i = 0; i < (int)P.size(); i++)
+    printf("(%.2lf, %.2lf)\n", P[i].x, P[i].y);
+
+  // rearrange the points as shown in the diagram below
+  P.clear();
+  P.push_back(point(2, 2));
+  P.push_back(point(4, 3));
+  P.push_back(point(2, 4));
+  P.push_back(point(6, 6));
+  P.push_back(point(2, 6));
+  P.push_back(point(6, 5));
+  P.push_back(point(8, 6));
+
+  /*
+  // the positions of these 7 points (0-based indexing)
+  6   P4      P3  P6
+  5           P5
+  4   P2
+  3       P1
+  2   P0
+  1
+  0 1 2 3 4 5 6 7 8
+  */
+
+  double d = dist(P[0], P[5]);
+  printf("Euclidean distance between P[0] and P[5] = %.2lf\n", d); // should be 5.000
+
+  // line equations
+  line l1, l2, l3, l4;
+  pointsToLine(P[0], P[1], l1);
+  printf("%.2lf * x + %.2lf * y + %.2lf = 0.00\n", l1.a, l1.b, l1.c); // should be -0.50 * x + 1.00 * y - 1.00 = 0.00
+
+  pointsToLine(P[0], P[2], l2); // a vertical line, not a problem in "ax + by + c = 0" representation
+  printf("%.2lf * x + %.2lf * y + %.2lf = 0.00\n", l2.a, l2.b, l2.c); // should be 1.00 * x + 0.00 * y - 2.00 = 0.00
+
+  // parallel, same, and line intersection tests
+  pointsToLine(P[2], P[3], l3);
+  printf("l1 & l2 are parallel? %d\n", areParallel(l1, l2)); // no
+  printf("l1 & l3 are parallel? %d\n", areParallel(l1, l3)); // yes, l1 (P[0]-P[1]) and l3 (P[2]-P[3]) are parallel
+
+  pointsToLine(P[2], P[4], l4);
+  printf("l1 & l2 are the same? %d\n", areSame(l1, l2)); // no
+  printf("l2 & l4 are the same? %d\n", areSame(l2, l4)); // yes, l2 (P[0]-P[2]) and l4 (P[2]-P[4]) are the same line (note, they are two different line segments, but same line)
+  
+  point p12;
+  bool res = areIntersect(l1, l2, p12); // yes, l1 (P[0]-P[1]) and l2 (P[0]-P[2]) are intersect at (2.0, 2.0)
+  printf("l1 & l2 are intersect? %d, at (%.2lf, %.2lf)\n", res, p12.x, p12.y);
+
+  // other distances
+  point ans;
+  d = distToLine(P[0], P[2], P[3], ans);
+  printf("Closest point from P[0] to line         (P[2]-P[3]): (%.2lf, %.2lf), dist = %.2lf\n", ans.x, ans.y, d);
+  closestPoint(l3, P[0], ans);
+  printf("Closest point from P[0] to line V2      (P[2]-P[3]): (%.2lf, %.2lf), dist = %.2lf\n", ans.x, ans.y, dist(P[0], ans));
+
+  d = distToLineSegment(P[0], P[2], P[3], ans);
+  printf("Closest point from P[0] to line SEGMENT (P[2]-P[3]): (%.2lf, %.2lf), dist = %.2lf\n", ans.x, ans.y, d); // closer to A (or P[2]) = (2.00, 4.00)
+  d = distToLineSegment(P[1], P[2], P[3], ans);
+  printf("Closest point from P[1] to line SEGMENT (P[2]-P[3]): (%.2lf, %.2lf), dist = %.2lf\n", ans.x, ans.y, d); // closer to midway between AB = (3.20, 4.60)
+  d = distToLineSegment(P[6], P[2], P[3], ans);
+  printf("Closest point from P[6] to line SEGMENT (P[2]-P[3]): (%.2lf, %.2lf), dist = %.2lf\n", ans.x, ans.y, d); // closer to B (or P[3]) = (6.00, 6.00)
+
+  reflectionPoint(l4, P[1], ans);
+  printf("Reflection point from P[1] to line      (P[2]-P[4]): (%.2lf, %.2lf)\n", ans.x, ans.y); // should be (0.00, 3.00)
+
+  printf("Angle P[0]-P[4]-P[3] = %.2lf\n", RAD_to_DEG(angle(P[0], P[4], P[3]))); // 90 degrees
+  printf("Angle P[0]-P[2]-P[1] = %.2lf\n", RAD_to_DEG(angle(P[0], P[2], P[1]))); // 63.43 degrees
+  printf("Angle P[4]-P[3]-P[6] = %.2lf\n", RAD_to_DEG(angle(P[4], P[3], P[6]))); // 180 degrees
+
+  printf("P[0], P[2], P[3] form A left turn? %d\n", ccw(P[0], P[2], P[3])); // no
+  printf("P[0], P[3], P[2] form A left turn? %d\n", ccw(P[0], P[3], P[2])); // yes
+
+  printf("P[0], P[2], P[3] are collinear? %d\n", collinear(P[0], P[2], P[3])); // no
+  printf("P[0], P[2], P[4] are collinear? %d\n", collinear(P[0], P[2], P[4])); // yes
+
+  point p(3, 7), q(11, 13), r(35, 30); // collinear if r(35, 31)
+  printf("r is on the %s of line p-r\n", ccw(p, q, r) ? "left" : "right"); // right
+
+  /*
+  // the positions of these 6 points
+     E<--  4
+           3       B D<--
+           2   A C
+           1
+  -4-3-2-1 0 1 2 3 4 5 6
+          -1
+          -2
+   F<--   -3
+  */
+
+  // translation
+  point A(2.0, 2.0);
+  point B(4.0, 3.0);
+  vec v = toVec(A, B); // imagine there is an arrow from A to B (see the diagram above)
+  point C(3.0, 2.0);
+  point D = translate(C, v); // D will be located in coordinate (3.0 + 2.0, 2.0 + 1.0) = (5.0, 3.0)
+  printf("D = (%.2lf, %.2lf)\n", D.x, D.y);
+  point E = translate(C, scale(v, 0.5)); // E will be located in coordinate (3.0 + 1/2 * 2.0, 2.0 + 1/2 * 1.0) = (4.0, 2.5)
+  printf("E = (%.2lf, %.2lf)\n", E.x, E.y);
+
+  // rotation
+  printf("B = (%.2lf, %.2lf)\n", B.x, B.y); // B = (4.0, 3.0)
+  point F = rotate(B, 90); // rotate B by 90 degrees COUNTER clockwise, F = (-3.0, 4.0)
+  printf("F = (%.2lf, %.2lf)\n", F.x, F.y);
+  point G = rotate(B, 180); // rotate B by 180 degrees COUNTER clockwise, G = (-4.0, -3.0)
+  printf("G = (%.2lf, %.2lf)\n", G.x, G.y);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+#define EPS 1e-9
+#define PI acos(-1.0)
+
+double DEG_to_RAD(double d) { return d*PI / 180.0; }
+
+double RAD_to_DEG(double r) { return r*180.0 / PI; }
+
+struct point { double x, y;   // only used if more precision is needed
+  point() { x = y = 0.0; }                      // default constructor
+  point(double _x, double _y) : x(_x), y(_y) {}        // user-defined
+  bool operator == (point other) const {
+   return (fabs(x-other.x) < EPS && (fabs(y-other.y) < EPS)); } 
+  bool operator <(const point &p) const {
+   return x < p.x || (abs(x-p.x) < EPS && y < p.y); } };
+
+struct vec { double x, y;  // name: `vec' is different from STL vector
+  vec(double _x, double _y) : x(_x), y(_y) {} };
+
+vec toVec(point a, point b) {       // convert 2 points to vector a->b
+  return vec(b.x-a.x, b.y-a.y); }
+
+double dist(point p1, point p2) {                // Euclidean distance
+  return hypot(p1.x-p2.x, p1.y-p2.y); }               // return double
+
+// returns the perimeter, which is the sum of Euclidian distances
+// of consecutive line segments (polygon edges)
+double perimeter(const vector<point> &P) {
+  double result = 0.0;
+  for (int i = 0; i < (int)P.size()-1; i++)  // remember that P[0] = P[n-1]
+    result += dist(P[i], P[i+1]);
+  return result; }
+
+// returns the area
+double area(const vector<point> &P) {
+  double result = 0.0;
+  for (int i = 0; i < (int)P.size()-1; i++)             // Shoelace formula
+    result += (P[i].x*P[i+1].y - P[i+1].x*P[i].y); // if all points are int
+  return fabs(result)/2.0; }     // result can be int(eger) until last step
+
+double dot(vec a, vec b) { return (a.x*b.x + a.y*b.y); }
+
+double norm_sq(vec v) { return v.x*v.x + v.y*v.y; }
+
+double angle(point a, point o, point b) {  // returns angle aob in rad
+  vec oa = toVec(o, a), ob = toVec(o, b);
+  return acos(dot(oa, ob) / sqrt(norm_sq(oa) * norm_sq(ob))); }
+
+double cross(vec a, vec b) { return a.x*b.y - a.y*b.x; }
+
+double area_alternative(const vector<point> &P) {
+  double result = 0.0; point O(0.0, 0.0);
+  for (int i = 0; i < (int)P.size()-1; i++)
+    result += cross(toVec(O, P[i]), toVec(O, P[i+1]));
+  return fabs(result) / 2.0; }
+
+// note: to accept collinear points, we have to change the `> 0'
+// returns true if point r is on the left side of line pq
+bool ccw(point p, point q, point r) {
+  return cross(toVec(p, q), toVec(p, r)) > 0; }
+
+// returns true if point r is on the same line as the line pq
+bool collinear(point p, point q, point r) {
+  return fabs(cross(toVec(p, q), toVec(p, r))) < EPS; }
+
+// returns true if we always make the same turn while examining
+// all the edges of the polygon one by one
+bool isConvex(const vector<point> &P) {
+  int sz = (int)P.size();
+  if (sz <= 3) return false;   // a point/sz=2 or a line/sz=3 is not convex
+  bool firstTurn = ccw(P[0], P[1], P[2]);            // remember one result
+  for (int i = 1; i < sz-1; i++)            // then compare with the others
+    if (ccw(P[i], P[i+1], P[(i+2) == sz ? 1 : i+2]) != firstTurn)
+      return false;            // different sign -> this polygon is concave
+  return true; }                                  // this polygon is convex
+
+// returns true if point p is in either convex/concave polygon P
+bool inPolygon(point pt, const vector<point> &P) {
+  if ((int)P.size() < 3) return false;               // avoid point or line
+  double sum = 0;    // assume the first vertex is equal to the last vertex
+  for (int i = 0; i < (int)P.size()-1; i++) {
+    if (ccw(pt, P[i], P[i+1]))
+         sum += angle(P[i], pt, P[i+1]);                   // left turn/ccw
+    else sum -= angle(P[i], pt, P[i+1]); }                 // right turn/cw
+  return fabs(sum) > PI; }   // 360d -> in, 0d -> out, we have large margin
+
+// line segment p-q intersect with line A-B.
+point lineIntersectSeg(point p, point q, point A, point B) {
+  double a = B.y - A.y;
+  double b = A.x - B.x;
+  double c = B.x * A.y - A.x * B.y;
+  double u = fabs(a * p.x + b * p.y + c);
+  double v = fabs(a * q.x + b * q.y + c);
+  return point((p.x * v + q.x * u) / (u+v), (p.y * v + q.y * u) / (u+v)); }
+
+// cuts polygon Q along the line formed by point a -> point b
+// (note: the last point must be the same as the first point)
+vector<point> cutPolygon(point a, point b, const vector<point> &Q) {
+  vector<point> P;
+  for (int i = 0; i < (int)Q.size(); i++) {
+    double left1 = cross(toVec(a, b), toVec(a, Q[i])), left2 = 0;
+    if (i != (int)Q.size()-1) left2 = cross(toVec(a, b), toVec(a, Q[i+1]));
+    if (left1 > -EPS) P.push_back(Q[i]);       // Q[i] is on the left of ab
+    if (left1 * left2 < -EPS)        // edge (Q[i], Q[i+1]) crosses line ab
+      P.push_back(lineIntersectSeg(Q[i], Q[i+1], a, b));
+  }
+  if (!P.empty() && !(P.back() == P.front()))
+    P.push_back(P.front());        // make P's first point = P's last point
+  return P; }
+
+vector<point> CH_Andrew(vector<point> &Pts) {
+  int n = Pts.size(), k = 0;
+  vector<point> H(2*n);
+  sort(Pts.begin(), Pts.end());        // sort the points lexicographically
+  for (int i = 0; i < n; i++) {                         // build lower hull
+    while (k >= 2 && ccw(H[k-2], H[k-1], Pts[i]) <= 0) k--;
+    H[k++] = Pts[i];
+  }
+  for (int i = n-2, t = k+1; i >= 0; i--) {             // build upper hull
+    while (k >= t && ccw(H[k-2], H[k-1], Pts[i]) <= 0) k--;
+    H[k++] = Pts[i];
+  }
+  H.resize(k);
+  return H;
+}
+
+point pivot(0, 0);
+vector<point> CH_Graham(vector<point> &Pts) {
+  vector<point> P(Pts);      // copy all points so that Pts is not affected
+  int i, j, n = (int)P.size();
+  if (n <= 3) {          // corner cases: n=1=point, n=2=line, n=3=triangle
+    if (!(P[0] == P[n-1])) P.push_back(P[0]); // safeguard from corner case
+    return P; }                                       // the CH is P itself
+
+  // first, find P0 = point with lowest Y and if tie: rightmost X
+  int P0 = 0;
+  for (i = 1; i < n; i++)                                           // O(n)
+    if (P[i].y < P[P0].y || (P[i].y == P[P0].y && P[i].x > P[P0].x))
+      P0 = i;
+  swap(P[0], P[P0]);                                // swap P[P0] with P[0]
+
+  // second, sort points by angle w.r.t. pivot P0, O(n log n) for this sort
+  pivot = P[0];                    // use this global variable as reference
+  sort(++P.begin(), P.end(), [](point a, point b) {  // we do not sort P[0]
+    if (collinear(pivot, a, b))                             // special case
+      return dist(pivot, a) < dist(pivot, b);  // check which one is closer
+    double d1x = a.x-pivot.x, d1y = a.y-pivot.y;
+    double d2x = b.x-pivot.x, d2y = b.y-pivot.y;
+    return (atan2(d1y, d1x) - atan2(d2y, d2x)) < 0; }); // compare 2 angles
+
+  // third, the ccw tests, although complex, it is just O(n)
+  vector<point> S;
+  S.push_back(P[n-1]); S.push_back(P[0]); S.push_back(P[1]);   // initial S
+  i = 2;                                         // then, we check the rest
+  while (i < n) {     // note: n must be >= 3 for this method to work, O(n)
+    j = (int)S.size()-1;
+    if (ccw(S[j-1], S[j], P[i])) S.push_back(P[i++]);  // left turn, accept
+    else S.pop_back(); }   // or pop the top of S until we have a left turn
+  return S; } // return the result, overall O(n log n) due to angle sorting
+
+int main() {
+  // 6 points, entered in counter clockwise order, 0-based indexing
+  vector<point> P;
+  P.emplace_back(1, 1);
+  P.emplace_back(3, 3);
+  P.emplace_back(9, 1);
+  P.emplace_back(12, 4);
+  P.emplace_back(9, 7);
+  P.emplace_back(1, 7);
+  P.push_back(P[0]); // loop back
+
+  printf("Perimeter of polygon = %.2lf\n", perimeter(P)); // 31.64
+  printf("Area of polygon = %.2lf\n", area(P)); // 49.00
+  printf("Area of polygon = %.2lf\n", area_alternative(P)); // 49.00
+  printf("Is convex = %d\n", isConvex(P)); // false (P1 is the culprit)
+
+  //// the positions of P6 and P7 w.r.t the polygon
+  //7 P5--------------P4
+  //6 |                  \
+  //5 |                    \
+  //4 |   P7                P3
+  //3 |   P1___            /
+  //2 | / P6    \ ___    /
+  //1 P0              P2
+  //0 1 2 3 4 5 6 7 8 9 101112
+
+  point P6(3, 2); // outside this (concave) polygon
+  printf("Point P6 is inside this polygon = %d\n", inPolygon(P6, P)); // false
+  point P7(3, 4); // inside this (concave) polygon
+  printf("Point P7 is inside this polygon = %d\n", inPolygon(P7, P)); // true
+
+  // cutting the original polygon based on line P[2] -> P[4] (get the left side)
+  //7 P5--------------P4
+  //6 |               |  \
+  //5 |               |    \
+  //4 |               |     P3
+  //3 |   P1___       |    /
+  //2 | /       \ ___ |  /
+  //1 P0              P2
+  //0 1 2 3 4 5 6 7 8 9 101112
+  // new polygon (notice the index are different now):
+  //7 P4--------------P3
+  //6 |               |
+  //5 |               |
+  //4 |               |
+  //3 |   P1___       |
+  //2 | /       \ ___ |
+  //1 P0              P2
+  //0 1 2 3 4 5 6 7 8 9
+
+  P = cutPolygon(P[2], P[4], P);
+  printf("Perimeter of polygon = %.2lf\n", perimeter(P)); // smaller now 29.15
+  printf("Area of polygon = %.2lf\n", area(P)); // 40.00
+
+  // running convex hull of the resulting polygon (index changes again)
+  //7 P3--------------P2
+  //6 |               |
+  //5 |               |
+  //4 |   P7          |
+  //3 |               |
+  //2 |               |
+  //1 P0--------------P1
+  //0 1 2 3 4 5 6 7 8 9
+
+  P = CH_Andrew(P); // now this is a rectangle
+  printf("Perimeter of polygon = %.2lf\n", perimeter(P)); // precisely 28.00
+  printf("Area of polygon = %.2lf\n", area(P)); // precisely 48.00
+  printf("Is convex = %d\n", isConvex(P)); // true
+  printf("Point P6 is inside this polygon = %d\n", inPolygon(P6, P)); // true
+  printf("Point P7 is inside this polygon = %d\n", inPolygon(P7, P)); // true
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+#define EPS 1e-9
+#define PI acos(-1.0)
+
+double DEG_to_RAD(double d) { return d * PI / 180.0; }
+
+double RAD_to_DEG(double r) { return r * 180.0 / PI; }
+
+struct point_i { int x, y;     // whenever possible, work with point_i
+  point_i() { x = y = 0; }                      // default constructor
+  point_i(int _x, int _y) : x(_x), y(_y) {} };          // constructor
+
+struct point { double x, y;   // only used if more precision is needed
+  point() { x = y = 0.0; }                      // default constructor
+  point(double _x, double _y) : x(_x), y(_y) {} };      // constructor
+
+double dist(point p1, point p2) {
+  return hypot(p1.x - p2.x, p1.y - p2.y); }
+
+double perimeter(double ab, double bc, double ca) {
+  return ab + bc + ca; }
+
+double perimeter(point a, point b, point c) {
+  return dist(a, b) + dist(b, c) + dist(c, a); }
+
+double area(double ab, double bc, double ca) {
+  // Heron's formula, split sqrt(a * b) into sqrt(a) * sqrt(b); in implementation
+  double s = 0.5 * perimeter(ab, bc, ca);
+  return sqrt(s) * sqrt(s - ab) * sqrt(s - bc) * sqrt(s - ca); }
+
+double area(point a, point b, point c) {
+  return area(dist(a, b), dist(b, c), dist(c, a)); }
+
+//====================================================================
+// from ch7_01_points_lines
+struct line { double a, b, c; }; // a way to represent a line
+
+// the answer is stored in the third parameter (pass by reference)
+void pointsToLine(point p1, point p2, line &l) {
+  if (fabs(p1.x - p2.x) < EPS) {              // vertical line is fine
+    l.a = 1.0;   l.b = 0.0;   l.c = -p1.x;           // default values
+  } else {
+    l.a = -(double)(p1.y - p2.y) / (p1.x - p2.x);
+    l.b = 1.0;              // IMPORTANT: we fix the value of b to 1.0
+    l.c = -(double)(l.a * p1.x) - p1.y;
+} }
+
+bool areParallel(line l1, line l2) {        // check coefficient a + b
+  return (fabs(l1.a-l2.a) < EPS) && (fabs(l1.b-l2.b) < EPS); }
+
+// returns true (+ intersection point) if two lines are intersect
+bool areIntersect(line l1, line l2, point &p) {
+  if (areParallel(l1, l2)) return false;            // no intersection
+  // solve system of 2 linear algebraic equations with 2 unknowns
+  p.x = (l2.b * l1.c - l1.b * l2.c) / (l2.a * l1.b - l1.a * l2.b);
+  // special case: test for vertical line to avoid division by zero
+  if (fabs(l1.b) > EPS) p.y = -(l1.a * p.x + l1.c);
+  else                  p.y = -(l2.a * p.x + l2.c);
+  return true; }
+
+struct vec { double x, y;  // name: `vec' is different from STL vector
+  vec(double _x, double _y) : x(_x), y(_y) {} };
+
+vec toVec(point a, point b) {       // convert 2 points to vector a->b
+  return vec(b.x - a.x, b.y - a.y); }
+
+vec scale(vec v, double s) {        // nonnegative s = [<1 .. 1 .. >1]
+  return vec(v.x * s, v.y * s); }               // shorter.same.longer
+
+point translate(point p, vec v) {        // translate p according to v
+  return point(p.x + v.x , p.y + v.y); }
+//====================================================================
+
+double rInCircle(double ab, double bc, double ca) {
+  return area(ab, bc, ca) / (0.5 * perimeter(ab, bc, ca)); }
+
+double rInCircle(point a, point b, point c) {
+  return rInCircle(dist(a, b), dist(b, c), dist(c, a)); }
+
+// assumption: the required points/lines functions have been written
+// returns 1 if there is an inCircle center, returns 0 otherwise
+// if this function returns 1, ctr will be the inCircle center
+// and r is the same as rInCircle
+int inCircle(point p1, point p2, point p3, point &ctr, double &r) {
+  r = rInCircle(p1, p2, p3);
+  if (fabs(r) < EPS) return 0;                   // no inCircle center
+
+  line l1, l2;                    // compute these two angle bisectors
+  double ratio = dist(p1, p2) / dist(p1, p3);
+  point p = translate(p2, scale(toVec(p2, p3), ratio / (1 + ratio)));
+  pointsToLine(p1, p, l1);
+
+  ratio = dist(p2, p1) / dist(p2, p3);
+  p = translate(p1, scale(toVec(p1, p3), ratio / (1 + ratio)));
+  pointsToLine(p2, p, l2);
+
+  areIntersect(l1, l2, ctr);           // get their intersection point
+  return 1; }
+
+double rCircumCircle(double ab, double bc, double ca) {
+  return ab * bc * ca / (4.0 * area(ab, bc, ca)); }
+
+double rCircumCircle(point a, point b, point c) {
+  return rCircumCircle(dist(a, b), dist(b, c), dist(c, a)); }
+
+// assumption: the required points/lines functions have been written
+// returns 1 if there is a circumCenter center, returns 0 otherwise
+// if this function returns 1, ctr will be the circumCircle center
+// and r is the same as rCircumCircle
+int circumCircle(point p1, point p2, point p3, point &ctr, double &r){
+  double a = p2.x - p1.x, b = p2.y - p1.y;
+  double c = p3.x - p1.x, d = p3.y - p1.y;
+  double e = a * (p1.x + p2.x) + b * (p1.y + p2.y);
+  double f = c * (p1.x + p3.x) + d * (p1.y + p3.y);
+  double g = 2.0 * (a * (p3.y - p2.y) - b * (p3.x - p2.x));
+  if (fabs(g) < EPS) return 0;
+
+  ctr.x = (d*e - b*f) / g;
+  ctr.y = (a*f - c*e) / g;
+  r = dist(p1, ctr);  // r = distance from center to 1 of the 3 points
+  return 1; }
+
+// returns true if point d is inside the circumCircle defined by a,b,c
+int inCircumCircle(point a, point b, point c, point d) {
+  return (a.x - d.x) * (b.y - d.y) * ((c.x - d.x) * (c.x - d.x) + (c.y - d.y) * (c.y - d.y)) +
+         (a.y - d.y) * ((b.x - d.x) * (b.x - d.x) + (b.y - d.y) * (b.y - d.y)) * (c.x - d.x) +
+         ((a.x - d.x) * (a.x - d.x) + (a.y - d.y) * (a.y - d.y)) * (b.x - d.x) * (c.y - d.y) -
+         ((a.x - d.x) * (a.x - d.x) + (a.y - d.y) * (a.y - d.y)) * (b.y - d.y) * (c.x - d.x) -
+         (a.y - d.y) * (b.x - d.x) * ((c.x - d.x) * (c.x - d.x) + (c.y - d.y) * (c.y - d.y)) -
+         (a.x - d.x) * ((b.x - d.x) * (b.x - d.x) + (b.y - d.y) * (b.y - d.y)) * (c.y - d.y) > 0 ? 1 : 0;
+}
+
+bool canFormTriangle(double a, double b, double c) {
+  return (a + b > c) && (a + c > b) && (b + c > a); }
+
+int main() {
+  double base = 4.0, h = 3.0;
+  double A = 0.5 * base * h;
+  printf("Area = %.2lf\n", A);
+
+  point a;                                         // a right triangle
+  point b(4.0, 0.0);
+  point c(4.0, 3.0);
+
+  double p = perimeter(a, b, c);
+  double s = 0.5 * p;
+  A = area(a, b, c);
+  printf("Area = %.2lf\n", A);            // must be the same as above
+
+  double r = rInCircle(a, b, c);
+  printf("R1 (radius of incircle) = %.2lf\n", r);              // 1.00
+  point ctr;
+  int res = inCircle(a, b, c, ctr, r);
+  printf("R1 (radius of incircle) = %.2lf\n", r);        // same, 1.00
+  printf("Center = (%.2lf, %.2lf)\n", ctr.x, ctr.y);   // (3.00, 1.00)
+
+  printf("R2 (radius of circumcircle) = %.2lf\n", rCircumCircle(a, b, c)); // 2.50
+  res = circumCircle(a, b, c, ctr, r);
+  printf("R2 (radius of circumcircle) = %.2lf\n", r);   // same, 2.50
+  printf("Center = (%.2lf, %.2lf)\n", ctr.x, ctr.y);   // (2.00, 1.50)
+
+  point d(2.0, 1.0);               // inside triangle and circumCircle
+  printf("d inside circumCircle (a, b, c) ? %d\n", inCircumCircle(a, b, c, d));
+  point e(2.0, 3.9);   // outside the triangle but inside circumCircle
+  printf("e inside circumCircle (a, b, c) ? %d\n", inCircumCircle(a, b, c, e));
+  point f(2.0, -1.1);                              // slightly outside
+  printf("f inside circumCircle (a, b, c) ? %d\n", inCircumCircle(a, b, c, f));
+
+  // Law of Cosines
+  double ab = dist(a, b);
+  double bc = dist(b, c);
+  double ca = dist(c, a);
+  double alpha = RAD_to_DEG(acos((ca * ca + ab * ab - bc * bc) / (2.0 * ca * ab)));
+  printf("alpha = %.2lf\n", alpha);
+  double beta  = RAD_to_DEG(acos((ab * ab + bc * bc - ca * ca) / (2.0 * ab * bc)));
+  printf("beta  = %.2lf\n", beta);
+  double gamma = RAD_to_DEG(acos((bc * bc + ca * ca - ab * ab) / (2.0 * bc * ca)));
+  printf("gamma = %.2lf\n", gamma);
+
+  // Law of Sines
+  printf("%.2lf == %.2lf == %.2lf\n", bc / sin(DEG_to_RAD(alpha)), ca / sin(DEG_to_RAD(beta)), ab / sin(DEG_to_RAD(gamma)));
+
+  // Phytagorean Theorem
+  printf("%.2lf^2 == %.2lf^2 + %.2lf^2\n", ca, ab, bc);
+
+  // Triangle Inequality
+  printf("(%d, %d, %d) => can form triangle? %d\n", 3, 4, 5, canFormTriangle(3, 4, 5)); // yes
+  printf("(%d, %d, %d) => can form triangle? %d\n", 3, 4, 7, canFormTriangle(3, 4, 7)); // no, actually straight line
+  printf("(%d, %d, %d) => can form triangle? %d\n", 3, 4, 8, canFormTriangle(3, 4, 8)); // no
+
+  return 0;
+}
+
+```
+
+```cpp
+chap 8
+// World Finals Stockholm 2009, A - A Careful Approach, UVa 1079, LA 4445
+
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
+using namespace std;
+
+int i, n, caseNo = 1, order[8];
+double a[8], b[8], L, maxL;
+
+double greedyLanding() {  // with certain landing order, and certain L, try
+         // landing those planes and see what is the gap to b[order[n - 1]]
+  double lastLanding = a[order[0]];      // greedy, 1st aircraft lands ASAP
+  for (i = 1; i < n; i++) {                      // for the other aircrafts
+    double targetLandingTime = lastLanding + L;
+    if (targetLandingTime <= b[order[i]])
+       // can land: greedily choose max of a[order[i]] or targetLandingTime
+      lastLanding = max(a[order[i]], targetLandingTime);
+    else
+      return 1;
+  }
+  // return +ve value to force binary search to reduce L
+  // return -ve value to force binary search to increase L
+  return lastLanding - b[order[n - 1]];
+}
+
+int main() {
+  while (scanf("%d", &n), n) {                               // 2 <= n <= 8
+    for (i = 0; i < n; i++) {   // plane i land safely at interval [ai, bi]
+      scanf("%lf %lf", &a[i], &b[i]);
+      a[i] *= 60; b[i] *= 60;  // originally in minutes, convert to seconds
+      order[i] = i;
+    }
+
+    maxL = -1.0;                             // variable to be searched for
+    do {                           // permute plane landing order, up to 8!
+      double lo = 0, hi = 86400;              // min 0s, max 1 day = 86400s
+      L = -1;                          // start with an infeasible solution
+      while (fabs(lo - hi) >= 1e-3) {        // binary search L, EPS = 1e-3
+        L = (lo + hi) / 2.0;   // we want the answer rounded to nearest int
+        double retVal = greedyLanding();                // round down first
+        if (retVal <= 1e-2) lo = L;                      // must increase L
+        else                hi = L;          // infeasible, must decrease L
+      }
+      maxL = max(maxL, L);             // get the max over all permutations
+    }
+    while (next_permutation(order, order + n));     // try all permutations
+
+    // other way for rounding is to use printf format string: %.0lf:%0.2lf
+    maxL = (int)(maxL + 0.5);                    // round to nearest second
+    printf("Case %d: %d:%0.2d\n", caseNo++, (int)(maxL/60), (int)maxL%60);
+  }
+
+  return 0;
+}
+// Sharing Chocolate
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define twoPow(X) (1 << (X))
+#define bitOn(S, X) (((S) & twoPow(X)) != 0)
+#define setBitOn(S, X) ((S) | twoPow(X))
+#define getBit(S, X) (((S) >> X) & 1)
+
+int i, n, target, x, y, num_pieces[16], caseNo = 1;
+int memo[101][1<<16], area[1<<16];
+
+int count_area(int S) {
+  int retval = 0;
+  for (int i = 0; i < n; i++)
+    if (bitOn(S, i)) // if this bit is on
+      retval += num_pieces[i];
+  return retval;
+}
+
+bool dp(int w, int S) {
+  if (memo[w][S] != -1) return memo[w][S];  
+  int a = area[S];
+  if (w == 0 || a%w != 0) return memo[w][S] = false;
+  int h = a/w; 
+  // if (memo[h][S] != -1) return memo[w][S] = memo[h][S];
+  vector<short> bit;
+  for (int i = 0; i < n; i++) if (bitOn(S, i)) bit.push_back(i);
+  int l = bit.size();
+  if (l == 1) // if only one item
+    memo[w][S] = true;
+  else {
+    memo[w][S] = false;
+    for (int t = 0; t <= twoPow(l-1)-2; t++) {
+      int s1 = setBitOn(0, bit[l-1]); // Set one always belong to set #1, can reduce search space by half
+      int s2 = 0;
+      for (int k = 0; k < l-1; k++)
+        if (bitOn(t, k))
+          s1 = setBitOn(s1, bit[k]);
+        else
+          s2 = setBitOn(s2, bit[k]);
+      bool op1 = dp(w, s1) && dp(w, s2); // horizontal cut
+      bool op2 = dp(h, s1) && dp(h, s2); // vertical cut
+      if (op1 || op2) {
+        memo[w][S] = true;
+        break;
+      } 
+    }     
+  }
+  return memo[w][S];
+}
+
+int main() {
+  while (scanf("%d", &n), n) {
+    scanf("%d %d", &x, &y);
+    for (i = 0; i < n; i++) scanf("%d", &num_pieces[i]);
+    target = twoPow(n)-1;
+    memset(area, -1, sizeof area);
+    for (i = 0; i <= target; i++) area[i] = count_area(i); // O(32,768*16 = 524,288)
+    memset(memo, -1, sizeof memo);
+    printf("Case %d: %s", caseNo++, (area[target] != x*y || // special case: cannot
+                                     !(dp(y, target))) ? "No\n" : "Yes\n"); // try subproblems
+  }
+  return 0;
+}
+// ACORN, UVa 1231, LA 4106
+
+#include <algorithm>
+#include <cstdio>
+#include <cstring>
+using namespace std;
+
+int main() {
+  int i, j, c, t, h, f, a, n, acorn[2010][2010], dp[2010];
+
+  scanf("%d", &c);
+  while (c--) {
+    scanf("%d %d %d", &t, &h, &f);
+    memset(acorn, 0, sizeof acorn);
+    for (i = 0; i < t; i++) {
+      scanf("%d", &a);
+      for (j = 0; j < a; j++) {
+        scanf("%d", &n);
+        acorn[i][n]++; // there is an acorn here
+      }
+    }
+
+    for (int tree = 0; tree < t; tree++) // initialization
+      dp[h] = max(dp[h], acorn[tree][h]);
+    for (int height = h - 1; height >= 0; height--)
+      for (int tree = 0; tree < t; tree++) {
+        acorn[tree][height] +=
+          max(acorn[tree][height + 1], // from this tree, +1 above
+          ((height + f <= h) ? dp[height + f] : 0)); // best from tree at height + f
+        dp[height] = max(dp[height], acorn[tree][height]); // update this too
+      }
+    printf("%d\n", dp[0]); // solution will be here
+  }
+  // ignore the last number 0
+
+  return 0;
+}
+// Free Parentheses
+
+#include <bits/stdc++.h>
+using namespace std;
+
+int num[35], sign[35], cnt;
+int memo[35][35][6500];
+set<int> S;
+
+void dp(int open, int n, int value) {
+  if (memo[open][n][value+3200] != -1) return;
+  if (n == cnt-1) {
+    S.insert(value);
+    return;
+  }
+  int nval = sign[n+1] * num[n+1] * (open%2 == 0 ? 1 : -1);
+  if (open > 0) dp(open-1, n+1, value+nval);
+  if (sign[n+1] == -1) dp(open+1, n+1, value+nval);
+  dp(open, n+1, value+nval);
+  memo[open][n][value+3200] = 0;
+}
+
+int main() {
+  string s;
+  char c;
+  while (getline(cin, s)) {
+    stringstream sin;
+    sin << s;
+    sin >> num[0];
+    S.clear();
+    sign[0] = 1;
+    cnt = 1;
+    while (sin >> c) {
+      sign[cnt] = c == '-' ? -1 : 1;
+      sin >> num[cnt];
+      cnt++;
+    }
+    memset(memo, -1, sizeof memo);
+    dp(0, 0, num[0]);
+    printf("%d\n", (int)S.size());
+  }
+  return 0;
+}
+// Forming Quiz Teams
+
+#include <bits/stdc++.h>        // if you have problems with this C++ code,
+using namespace std;        // consult your programming text books first...
+        /* Forming Quiz Teams, the solution for UVa 10911 above */
+          // using global variables is a bad software engineering practice,
+int N, target;                  // but it is OK for competitive programming
+double dist[20][20], memo[1 << 16];  // 1 << 16 = 2^16, note that max N = 8
+
+double matching(int bitmask) {                        // DP state = bitmask
+                       // we initialize `memo' with -1 in the main function
+  if (memo[bitmask] > -0.5)          // this state has been computed before
+    return memo[bitmask];                   // simply lookup the memo table
+  if (bitmask == target)                // all students are already matched
+    return memo[bitmask] = 0;                              // the cost is 0
+
+  double ans = 2000000000.0;               // initialize with a large value
+  int p1, p2;
+  for (p1 = 0; p1 < 2 * N; p1++)
+    if (!(bitmask & (1 << p1)))
+      break;                              // find the first bit that is off
+  for (p2 = p1 + 1; p2 < 2 * N; p2++)              // then, try to match p1
+    if (!(bitmask & (1 << p2)))     // with another bit p2 that is also off
+      ans = min(ans,                                    // pick the minimum
+                dist[p1][p2] + matching(bitmask | (1 << p1) | (1 << p2)));
+
+  return memo[bitmask] = ans;    // store result in a memo table and return
+}
+
+int main() {
+  int i, j, caseNo = 1, x[20], y[20];
+  // freopen("10911.txt", "r", stdin);      // redirect input file to stdin
+
+  while (scanf("%d", &N), N) {                    // yes, we can do this :)
+    for (i = 0; i < 2 * N; i++)
+      scanf("%*s %d %d", &x[i], &y[i]);                // '%*s' skips names
+    for (i = 0; i < 2 * N - 1; i++)        // build pairwise distance table
+      for (j = i + 1; j < 2 * N; j++)      // have you used `hypot' before?
+        dist[i][j] = dist[j][i] = hypot(x[i] - x[j], y[i] - y[j]);
+
+    // use DP to solve min weighted perfect matching on small general graph
+    for (i = 0; i < (1 << 16); i++) memo[i] = -1.0;  // set -1 to all cells
+    target = (1 << (2 * N)) - 1;
+    printf("Case %d: %.2lf\n", caseNo++, matching(0));
+} } // return 0;
+// Gentlemen Agreement
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define FOR(i,a,b) for (int i=(a),_b=(b); i<=_b; i++)
+#define FORD(i,a,b) for (int i=(a),_b=(b); i>=_b; i--)
+#define REP(i,n) for (int i=0,_n=(n); i<_n; i++)
+#define MAXI 62
+
+long long AM[MAXI], dpcon[MAXI];
+int V, E, nS, mxS;
+
+void backtracking(int i, long long used, int depth) {
+  if (used == (1<<V)-1) {                 // all intersections are visited
+    nS++;                                         // one more possible set
+    mxS = max(mxS, depth);                              // size of the set
+  }
+  else {
+    for (int j = i; j < V; j++)
+      if (!(used & (1<<j)))           // if intersection i is not yet used
+        backtracking(j+1, used|AM[j], depth+1); // use i and its neighbors
+  }
+}
+
+int main() {
+  int TC; scanf("%d", &TC);
+  while (TC--) {
+    scanf("%d %d", &V, &E);
+
+    // a more powerful, bit-wise adjacency list (for faster set operations)
+    for (int i = 0; i < V; i++)
+      AM[i] = (1 << i);                                  // i to itself
+    for (int i = 0; i < E; i++) {
+      int a, b; scanf("%d %d", &a, &b);
+      AM[a] |= (1<<b);
+      AM[b] |= (1<<a);
+    }
+
+    // speed up
+    dpcon[V] = 0;
+    FORD (i, V-1, 0) dpcon[i] = AM[i] | dpcon[i + 1];
+
+    nS = mxS = 0;
+    backtracking(0, 0, 0); // just a backtracking with bitmask/subset
+    printf("%d\n%d\n", nS, mxS);
+  }
+  return 0;
+}
+// Another n-Queen Problem
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define LSOne(S) ((S) & (-S))
+
+typedef long long ll;
+
+int n, mask[32];
+
+ll bf(int row, int col, int left_diagonal, int right_diagonal) {
+  if (row == n) return 1; // done, 1 way found
+  // bit = all possible column positions
+  int bit = mask[row] | col | left_diagonal | right_diagonal; // list of forbidden column
+  bit = ~bit; // after negation, list of allowed columns, but it turns on more bits than necessary
+  bit &= (1<<n) - 1; // (1<<n) - 1, turn on n bits only, we want to concentrate on these n bits only
+  ll total = 0; // now recursively count the ways
+  while (bit) { // try each bit that is turned on
+    int t = LSOne(bit); // the first bit that is on
+    // for future iterations, forbid column t and left_diagonal/right diagonal that has t
+    total += bf(row+1, col | t, (left_diagonal|t) >> 1, (right_diagonal|t) << 1);
+    bit -= t; // remove that bit t from 'bit'
+  }
+  return total;
+}
+
+int main() {
+  int caseNo = 1;
+  char M[32];
+  while (scanf("%d ", &n), n) {
+    for (int i = 0; i < n; i++) {
+      scanf("%s ", &M);
+      mask[i] = 0;
+      for (int j = 0; j < n; j++)
+        if (M[j] == '*')
+          mask[i] |= (1<<j); // mark out the bad squares
+    }
+    printf("Case %d: %lld\n", caseNo++, bf(0, 0, 0, 0));
+  }
+  return 0;
+}
+// Editing a Book
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define REP(i, n) for (int i = 0, _n = (n); i < _n; i++)
+
+typedef map<int, int> mii;
+
+int encode(vector<int> &a) { // turn array into a number for efficiency
+  int ret = 0;
+  REP (i, a.size())
+    ret = (ret * 10) + a[i];
+  return ret;
+}
+
+// BFS from s until nL depth, store the state distance in "dis",
+// "ref" is a state distance from another BFS source.
+// If a node exists in "ref" then return the "meet in the middle distance"
+//    from source s and from another source (ref's source)
+int bfs(int s, int nL, mii &dis, mii &ref) {
+  queue<int> q; q.push(s);
+  dis.clear(); dis[s] = 0;
+  for (int L = 0; L < nL && q.size(); L++) { // limit to depth nL only
+    REP (qq, q.size()) { // we do not use while (!q.empty()) to ensure we only touch nL layers only
+      int u = q.front(), t = u; q.pop();
+      vector<int> a;
+      REP (i, 9) a.push_back(t%10), t /= 10; // unpack the digits again
+      reverse(a.begin(), a.end());
+      for (int i = 0; i < 9; i++) { // try all possible substring
+        for (int j = i; j < 9; j++) {
+          vector<int> b = a;
+          b.erase(b.begin()+i, b.begin()+j+1); // cut index [i..j]
+          for (int k = 0; k < b.size(); k++) { // try all possible paste point
+            vector<int> c = b;
+            for (int l = j; l >= i; l--) // paste at location k (using array a)
+              c.insert(c.begin()+k, a[l]);
+            int v = encode(c);
+            if (ref.count(v)) return L + 1 + ref[v]; // touching the other side, this is the answer: L + 1 (this move) + from v to sorted state
+            if (dis.count(v)) continue; // if revisited, ignore
+            // relax and push to queue again
+            dis[v] = L+1;
+            q.push(v);
+          }
+        }
+      }
+    }
+  }
+  return 5;	// maximum distance (upperbound)
+}
+
+int main() {
+  mii d[10];
+  int n, caseNo = 1;
+  for (n = 1; n < 10; n++) { // precalculate bfs from 1, 12, 123, ..., 123456789
+    int s = 0; REP(i, n) s = s * 10 + i + 1; // the source
+    bfs(s, min(2, n), d[n], d[0]); // only need to go 2 level deep, d[0] is blank at this stage
+  }
+  while (scanf("%d", &n) != EOF && n) {
+    vector<int> a(n);
+    REP(i, n) scanf("%d", &a[i]); // up to n = 9, 1 digit, can be encoded as integer
+    int v = encode(a), res;
+    if (d[n].count(v)) res = d[n][v];	// search from s = 123456789, if found, we have an answer
+    else               res = bfs(v, 2, d[0], d[n]);	// otherwise, search from target v (2 level deep), if still not found, answer = 5
+    printf("Case %d: %d\n", caseNo++, res);
+  }
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAXD = 11;
+const int MAXQ = 1e6 + 5; // maximum size of queue
+
+int n, src, tgt, pk[MAXD], que[MAXQ];
+
+void precomp() {
+    pk[0] = 1;
+    for (int i = 1; i < MAXD; ++i)
+        pk[i] = pk[i - 1] * 10;
+}
+
+void init() {
+    src = tgt = 0;
+}
+
+void readInput() {
+    scanf("%d", &n);
+    for (int i = 1; i <= n; ++i) {
+        int x; scanf("%d", &x);
+        src = (src * 10) + x; // n is at most 9. Thus, it can be represented as a single integer.
+        tgt = (tgt * 10) + i;
+    }
+}
+
+// Fast shifter for the sequence of numbers.
+int shiftVal(int v, int l, int r, int k) { 
+    return (v / pk[n - l]) * pk[n - l] + // initial unmoved elements
+           (v % pk[n - k]) + // initial unmoved elements 
+           (v % pk[n - l]) / pk[n - r] * pk[n - k] + // move from  l ... r to begin at index k
+           (v % pk[n - r]) / pk[n - k] * pk[n - k + (r - l)]; // move from r ... k to begin at index l
+}
+
+int solve() {
+    if (src == tgt) return 0; // special case
+    
+    map<int, int> memo;
+    memo[src] = 1; que[0] = src;
+    memo[tgt] = 3; que[1] = tgt;
+    // the distance and id are compressed as a single integer for speed up
+    // initially a pair of integer {distance, id}
+    // id represents whether it comes from src or tgt
+    // it is set to 1 and 3 for speedup when checking whether a key exists in the map or not
+    // binary representation :
+    // - bit-0 : always 1, indicating that a key is present in the map
+    // - bit-1 : 0 if it comes from src; 1 if it comes from tgt
+    // - the other bits : represents the distance
+
+    for (int ql = 0, qr = 2; ql < qr; ql++) { // it is faster to use fixed size of queue
+        int cur = que[ql];
+        int dst = memo[cur];
+        for (int i = 0; i + 1 < n; i++)
+            for (int j = i + 1; j < n; j++)
+                for (int k = j + 1; k <= n; k++) { // C(N, 3) loop for the edges
+                    int nex = shiftVal(cur, i, j, k);
+                    int nv = memo[nex];
+
+                    if (nv) { // key is present
+                        if ((nv & 2) == (dst & 2)) continue;
+                        return (nv >> 2) + (dst >> 2) + 1;
+                    } else { // if key is not present, the default return value is 0
+                        memo[nex] = dst + 4;
+                        que[qr++] = nex;
+                    }
+                }
+    }
+    assert(0); // it is guaranteed that the answer always exists
+}
+
+int main() {
+    precomp();
+    for (int cs = 1; ; cs++) {
+        init();
+        readInput();
+        if (n == 0) break;
+
+        printf("Case %d: %d\n", cs, solve());
+    }
+    return 0;
+}// This code uses new C++17 structured binding
+// use this compiler setting "g++ -O2 -std=gnu++17 {cpp17file}"
+
+// Disclaimer: This code is a hybrid between old CP1-2-3 implementation of
+// Edmonds Karp's algorithm -- re-written in OOP fashion and the fast
+// Dinic's algorithm implementation by
+// https://github.com/jaehyunp/stanfordacm/blob/master/code/Dinic.cc
+// This code is written in modern C++17 standard
+
+#include <bits/stdc++.h>
+using namespace std;
+
+typedef long long ll;
+typedef tuple<int, ll, ll> edge;
+typedef vector<int> vi;
+typedef pair<int, int> ii;
+
+const ll INF = 1e18; // INF = 1e18, not 2^63-1 to avoid overflow
+
+class max_flow {
+private:
+  int V;
+  vector<edge> EL;
+  vector<vi> AL;
+  vi d, last;
+  vector<ii> p;
+
+  bool BFS(int s, int t) { // BFS to find augmenting path in residual graph
+    d.assign(V, -1); d[s] = 0;
+    queue<int> q({s});
+    p.assign(V, {-1, -1});                       // record BFS sp tree
+    while (!q.empty()) {
+      int u = q.front(); q.pop();
+      if (u == t) break;                         // stop as sink t reached
+      for (auto &idx : AL[u]) {                  // explore neighbors of u
+        auto &[v, cap, flow] = EL[idx];          // stored in EL[idx]
+        if ((cap-flow > 0) && (d[v] == -1))      // positive residual edge
+          d[v] = d[u]+1, q.push(v), p[v] = {u, idx}; // 3 lines in one!
+      }
+    }
+    return d[t] != -1;                           // has an augmenting path
+  }
+
+  ll send_one_flow(int s, int t, ll f = INF) {   // send one flow from s->t
+    if (s == t) return f;                        // bottleneck edge f found
+    auto &[u, idx] = p[t];
+    auto &[v, cap, flow] = EL[idx];
+    ll pushed = send_one_flow(s, u, min(f, cap-flow));
+    flow += pushed;
+    auto &[rv, rcap, rflow] = EL[idx^1];         // back edge
+    rflow -= pushed;                             // back flow
+    return pushed;
+  }
+
+  ll DFS(int u, int t, ll f = INF) {             // traverse from s->t
+    if ((u == t) || (f == 0)) return f;
+    for (int &i = last[u]; i < (int)AL[u].size(); ++i) { // from last edge
+      auto &[v, cap, flow] = EL[AL[u][i]];
+      if (d[v] == d[u]+1) {                      // in current layer graph
+        if (ll pushed = DFS(v, t, min(f, cap-flow))) {
+          flow += pushed;
+          auto &[rv, rcap, rflow] = EL[AL[u][i]^1]; // back edge
+          rflow -= pushed;
+          return pushed;
+        }
+      }
+    }
+    return 0;
+  }
+
+public:
+  max_flow(int _V) : V(_V) {
+    EL.clear();
+    AL.assign(V, vi());
+  }
+
+  // if you are adding a bidirectional edge u<->v with weight w into your
+  // flow graph, set directed = false (default value is directed = true)
+  void add_edge(int u, int v, ll w, bool directed = true) {
+    if (u == v) return;                          // safeguard: no self loop
+    EL.emplace_back(v, w, 0);                    // u->v, cap w, flow 0
+    AL[u].push_back(EL.size()-1);                // remember this index
+    EL.emplace_back(u, directed ? 0 : w, 0);     // back edge
+    AL[v].push_back(EL.size()-1);                // remember this index
+  }
+
+  ll edmonds_karp(int s, int t) {
+    ll mf = 0;                                   // mf stands for max_flow
+    while (BFS(s, t)) {                          // an O(V*E^2) algorithm
+      ll f = send_one_flow(s, t);                // find and send 1 flow f
+      if (f == 0) break;                         // if f == 0, stop
+      mf += f;                                   // if f > 0, add to mf
+    }
+    return mf;
+  }
+
+  ll dinic(int s, int t) {
+    ll mf = 0;                                   // mf stands for max_flow
+    while (BFS(s, t)) {                          // an O(V^2*E) algorithm
+      last.assign(V, 0);                         // important speedup
+      while (ll f = DFS(s, t))                   // exhaust blocking flow
+        mf += f;
+    }
+    return mf;
+  }
+};
+
+int main() {
+  /*
+  // Graph in Figure 4.24
+  4 0 3
+  2 2 3 1 7
+  2 2 1 3 2
+  1 3 7
+  0
+  */
+
+  freopen("maxflow_in.txt", "r", stdin);
+
+  int V, s, t; scanf("%d %d %d", &V, &s, &t);
+  max_flow mf(V);
+  for (int u = 0; u < V; ++u) {
+    int k; scanf("%d", &k);
+    while (k--) {
+      int v, w; scanf("%d %d", &v, &w);
+      mf.add_edge(u, v, w);                      // default: directed edge
+    }
+  }
+
+  // printf("%lld\n", mf.edmonds_karp(s, t));
+  printf("%lld\n", mf.dinic(s, t));
+
+  return 0;
+}
+
+```
+
+```cpp
+//chap 9
+#include <bits/stdc++.h>
+using namespace std;
+
+#define MAX_N 3                              // adjust this value as needed
+struct AugmentedMatrix { double mat[MAX_N][MAX_N + 1]; };
+struct ColumnVector { double vec[MAX_N]; };
+
+ColumnVector GaussianElimination(int N, AugmentedMatrix Aug) {
+  // input: N, Augmented Matrix Aug, output: Column vector X, the answer
+  int i, j, k, l; double t;
+
+  for (i = 0; i < N - 1; i++) {            // the forward elimination phase
+    l = i;
+    for (j = i + 1; j < N; j++)       // which row has largest column value
+      if (fabs(Aug.mat[j][i]) > fabs(Aug.mat[l][i]))
+        l = j;                                       // remember this row l
+    // swap this pivot row, reason: minimize floating point error
+    for (k = i; k <= N; k++)            // t is a temporary double variable
+      t = Aug.mat[i][k], Aug.mat[i][k] = Aug.mat[l][k], Aug.mat[l][k] = t;
+    for (j = i + 1; j < N; j++)     // the actual forward elimination phase
+      for (k = N; k >= i; k--)
+        Aug.mat[j][k] -= Aug.mat[i][k] * Aug.mat[j][i] / Aug.mat[i][i];
+  }
+
+  ColumnVector Ans;                          // the back substitution phase
+  for (j = N - 1; j >= 0; j--) {                         // start from back
+    for (t = 0.0, k = j + 1; k < N; k++) t += Aug.mat[j][k] * Ans.vec[k];
+    Ans.vec[j] = (Aug.mat[j][N] - t) / Aug.mat[j][j]; // the answer is here
+  }
+  return Ans;
+}
+
+int main() {
+  AugmentedMatrix Aug;
+  Aug.mat[0][0] = 1; Aug.mat[0][1] = 1; Aug.mat[0][2] = 2; Aug.mat[0][3] = 9;
+  Aug.mat[1][0] = 2; Aug.mat[1][1] = 4; Aug.mat[1][2] = -3; Aug.mat[1][3] = 1;
+  Aug.mat[2][0] = 3; Aug.mat[2][1] = 6; Aug.mat[2][2] = -5; Aug.mat[2][3] = 0;
+
+  ColumnVector X = GaussianElimination(3, Aug);
+  printf("X = %.1lf, Y = %.1lf, Z = %.1lf\n", X.vec[0], X.vec[1], X.vec[2]);
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+#define MAX_N 1000
+
+vector<vector<int>> children;
+
+int L[2*MAX_N], E[2*MAX_N], H[MAX_N], idx;
+
+void dfs(int cur, int depth) {
+  H[cur] = idx;
+  E[idx] = cur;
+  L[idx++] = depth;
+  for (auto &nxt : children[cur]) {
+    dfs(nxt, depth+1);
+    E[idx] = cur;                              // backtrack to current node
+    L[idx++] = depth;
+} }
+
+void buildRMQ() {
+  idx = 0;
+  memset(H, -1, sizeof H);
+  dfs(0, 0);                       // we assume that the root is at index 0
+}
+
+int main() {
+  children.assign(10, vector<int>());
+  children[0].push_back(1); children[0].push_back(7);
+  children[1].push_back(2); children[1].push_back(3); children[1].push_back(6);
+  children[3].push_back(4); children[3].push_back(5);
+  children[7].push_back(8); children[7].push_back(9);
+
+  buildRMQ();
+  for (int i = 0; i < 2*10-1; i++) printf("%d ", H[i]);
+  printf("\n");
+  for (int i = 0; i < 2*10-1; i++) printf("%d ", E[i]);
+  printf("\n");
+  for (int i = 0; i < 2*10-1; i++) printf("%d ", L[i]);
+  printf("\n");
+
+  return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+#define MAXN 10000                           // adjust this value as needed
+#define L2_N 14        // 2^14 = 16384 > 10000, adjust this value as needed
+
+class RMQ {                                          // Range Minimum Query
+private:
+  int i, j, k, x, y, P2[L2_N], L2[(1<<L2_N)+10], _A[MAXN], SpT[L2_N][MAXN];
+public:
+  RMQ(int n, int A[]) {    // constructor as well as pre-processing routine
+    // speed up powers of 2 and logarithmic computations
+    memset(L2, 0, sizeof L2);
+    for (i = 0; i <= L2_N; i++) {
+      P2[i] = (1<<i);
+      L2[(1<<i)] = i;
+    }
+    L2[0] = L2[1] = 0;
+    for (i = 2; i < (1<<L2_N); i++)
+      if (L2[i] == 0)
+        L2[i] = L2[i-1];
+
+    // initialization
+    for (j = 0; j < n; j++) {
+      _A[j] = A[j];
+      SpT[0][j] = j;                             // RMQ of sub array [j..j]
+    }
+
+    // the two nested loops below have overall time complexity = O(n log n)
+    for (i = 1; (1<<i) <= n; i++)     // for each i s.t. 2^i <= n, O(log n)
+      for (j = 0; j+(1<<i)-1 < n; j++) {          // for each valid j, O(n)
+        x = SpT[i-1][j];                             // covers [j..j+2^i-1]
+        y = SpT[i-1][j+(1<<(i-1))];      // covers [j+(1<<(i-1))..j+(1<<i)]
+        SpT[i][j] = _A[x] <= _A[y] ? x : y;
+      }
+  }
+
+  int query(int i, int j) {
+    k = L2[j-i+1];                                        // 2^k <= (j-i+1)
+    x = SpT[k][i];                                   // covers [i..i+2^k-1]
+    y = SpT[k][j-P2[k]+1];                           // covers [j-2^k+1..j]
+    // printf("%k = %d, i = %d, modj = %d, x = %d, y = %d\n", k, i, j-P2[k]+1, x, y);
+    return _A[x] <= _A[y] ? x : y;
+  }
+};
+
+int main() {
+  // same example as in chapter 2: segment tree
+  int n = 7, A[] = {18, 17, 13, 19, 15, 11, 20};
+  RMQ rmq(n, A);
+  // for (int i = 0; i < n; i++)
+  //   for (int j = i; j < n; j++)
+  //     printf("RMQ(%d, %d) = %d\n", i, j, rmq.query(i, j));
+  printf("%d\n", rmq.query(1, 5));
+
+  return 0;
+}
+// 15-Puzzle Problem with IDA*
+
+#include <algorithm>
+#include <cstdio>
+#include <map>
+using namespace std;
+
+#define INF 1000000000
+#define ROW_SIZE 4 // ROW_SIZE is a matrix of 4 x 4
+#define PUZZLE (ROW_SIZE*ROW_SIZE)
+#define X 15
+
+int p[PUZZLE];
+int lim, nlim;
+int dr[] = { 0,-1, 0, 1}; // E,N,W,S
+int dc[] = { 1, 0,-1, 0}; // R,U,L,D
+map<int, int> pred;
+map<unsigned long long, int> vis;
+char ans[] = "RULD";
+
+inline int h1() { // heuristic: sum of Manhattan distances (compute all)
+  int ans = 0;
+  for (int i = 0; i < PUZZLE; i++) {
+    int tgt_i = p[i] / 4, tgt_j = p[i] % 4;
+    if (p[i] != X)
+      ans += abs(i / 4 - tgt_i) + abs(i % 4 - tgt_j); // Manhattan distance
+  }
+  return ans;
+}
+
+inline int h2(int i1, int j1, int i2, int j2) { // heuristic: sum of manhattan distances (compute delta)
+  int tgt_i = p[i2 * 4 + j2] / 4, tgt_j = p[i2 * 4 + j2] % 4;
+  return -(abs(i2 - tgt_i) + abs(j2 - tgt_j)) + (abs(i1 - tgt_i) + abs(j1 - tgt_j));
+}
+
+inline bool goal() {
+  for (int i = 0; i < PUZZLE; i++)
+    if (p[i] != X && p[i] != i)
+      return false;
+  return true;
+}
+
+inline bool valid(int r, int c) {
+  return 0 <= r && r < 4 && 0 <= c && c < 4;
+}
+
+inline void swap(int i, int j, int new_i, int new_j) {
+  int temp = p[i * 4 + j];
+  p[i * 4 + j] = p[new_i * 4 + new_j];
+  p[new_i * 4 + new_j] = temp;
+}
+
+bool DFS(int g, int h) {
+  if (g + h > lim) {
+    nlim = min(nlim, g + h);
+    return false;
+  }
+
+  if (goal())
+    return true;
+
+  unsigned long long state = 0;
+  for (int i = 0; i < PUZZLE; i++) { // transform 16 numbers into 64 bits, exactly into ULL
+    state <<= 4; // move left 4 bits
+    state += p[i]; // add this digit (max 15 or 1111)
+  }
+
+  if (vis.count(state) && vis[state] <= g) // not pure backtracking... this is to prevent cycling
+    return false; // not good
+  vis[state] = g; // mark this as visited
+
+  int i, j, d, new_i, new_j;
+  for (i = 0; i < PUZZLE; i++)
+    if (p[i] == X)
+      break;
+  j = i % 4;
+  i /= 4;
+
+  for (d = 0; d < 4; d++) {
+    new_i = i + dr[d]; new_j = j + dc[d];
+    if (valid(new_i, new_j)) {
+      int dh = h2(i, j, new_i, new_j);
+      swap(i, j, new_i, new_j); // swap first
+      pred[g + 1] = d;
+      if (DFS(g + 1, h + dh)) // if ok, no need to restore, just go ahead
+        return true;
+      swap(i, j, new_i, new_j); // restore
+    }
+  }
+
+  return false;
+}
+
+int IDA_Star() {
+  lim = h1();
+  while (true) {
+    nlim = INF; // next limit
+    pred.clear();
+    vis.clear();
+    if (DFS(0, h1()))
+      return lim; 
+    if (nlim == INF)
+      return -1;
+    lim = nlim; // nlim > lim
+    if (lim > 45) // pruning condition in the problem
+      return -1;
+  }
+}
+
+void output(int d) {
+  if (d == 0)
+    return;
+  output(d - 1);
+  printf("%c", ans[pred[d]]);
+}
+
+int main() {
+#ifndef ONLINE_JUDGE
+  freopen("in.txt", "r", stdin);
+#endif
+
+  int N;
+  scanf("%d", &N);
+  while (N--) {
+    int i, j, blank = 0, sum = 0, ans = 0;
+    for (i = 0; i < 4; i++)
+      for (j = 0; j < 4; j++) {
+        scanf("%d", &p[i * 4 + j]);
+        if (p[i * 4 + j] == 0) {
+          p[i * 4 + j] = X; // change to X (15)
+          blank = i * 4 + j; // remember the index
+        }
+        else
+          p[i * 4 + j]--; // use 0-based indexing
+      }
+
+    for (i = 0; i < PUZZLE; i++)
+      for (j = 0; j < i; j++)
+        if (p[i] != X && p[j] != X && p[j] > p[i])
+          sum++;
+    sum += blank / ROW_SIZE;
+
+    if (sum % 2 != 0 && ((ans = IDA_Star()) != -1))
+      output(ans), printf("\n");
+    else
+      printf("This puzzle is not solvable.\n");
+  }
+
+  return 0;
+}
+// Roman Numerals
+
+#include <bits/stdc++.h>
+using namespace std;
+
+void AtoR(int A) {
+  map<int, string> cvt({
+    {1000,"M"}, {900,"CM"}, {500,"D"}, {400,"CD"}, {100,"C"}, {90,"XC"},
+    {50,"L"}, {40,"XL"}, {10,"X"}, {9,"IX"}, {5,"V"}, {4,"IV"}, {1,"I"} });
+  for (auto i = cvt.rbegin(); i != cvt.rend(); i++)  // from large to small
+    while (A >= i->first) {
+      printf("%s", i->second.c_str());
+      A -= i->first;
+    }
+  printf("\n");
+}
+
+void RtoA(string R) {
+  unordered_map<char, int> RtoA({
+    {'I',1}, {'V',5}, {'X',10}, {'L',50},
+    {'C',100}, {'D',500}, {'M',1000} });
+  int value = 0;
+  for (int i = 0; R[i]; i++)
+    if (R[i+1] && RtoA[R[i]] < RtoA[R[i+1]]) {     // check next char first
+      value += RtoA[R[i+1]] - RtoA[R[i]];                  // by definition
+      i++;                                                // skip this char
+    }
+    else
+      value += RtoA[R[i]];
+  printf("%d\n", value);
+}
+
+int main() {
+  AtoR(2018);
+  RtoA("MMXVIII");
+  // UVa 11616 will be trivial with AtoR and RtoA methods above
+  // char str[1000];
+  // while (gets(str) != NULL) {
+  //   if (isdigit(str[0])) AtoR(atoi(str));       // Arabic to Roman Numerals
+  //   else                 RtoA(str);             // Roman to Arabic Numerals
+  // }
+  return 0;
+}
+// Tunnelling the Earth
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define PI acos(-1.0)
+#define EARTH_RAD (6371009) // in meters
+
+double gcDistance(double pLat, double pLong,
+                  double qLat, double qLong, double radius) {
+  pLat *= PI / 180; pLong *= PI / 180;
+  qLat *= PI / 180; qLong *= PI / 180;
+  return radius * acos(cos(pLat)*cos(pLong)*cos(qLat)*cos(qLong) +
+                       cos(pLat)*sin(pLong)*cos(qLat)*sin(qLong) +
+                       sin(pLat)*sin(qLat));
+}
+
+double EucledianDistance(double pLat, double pLong, // 3D version
+                         double qLat, double qLong, double radius) {
+  double phi1 = (90 - pLat) * PI / 180;
+  double theta1 = (360 - pLong) * PI / 180;
+  double x1 = radius * sin(phi1) * cos(theta1);
+  double y1 = radius * sin(phi1) * sin(theta1);
+  double z1 = radius * cos(phi1);
+
+  double phi2 = (90 - qLat) * PI / 180;
+  double theta2 = (360 - qLong) * PI / 180;
+  double x2 = radius * sin(phi2) * cos(theta2);
+  double y2 = radius * sin(phi2) * sin(theta2);
+  double z2 = radius * cos(phi2);
+
+  double dx = x1 - x2, dy = y1 - y2, dz = z1 - z2;
+  return sqrt(dx * dx + dy * dy + dz * dz);
+}
+
+int main() {
+  int TC;
+  double lat1, lon1, lat2, lon2;
+
+  scanf("%d", &TC);
+  while (TC--) {
+    scanf("%lf %lf %lf %lf", &lat1, &lon1, &lat2, &lon2);
+    printf("%.0lf\n", gcDistance(lat1, lon1, lat2, lon2, EARTH_RAD) -
+                      EucledianDistance(lat1, lon1, lat2, lon2, EARTH_RAD));
+  }
+
+  return 0;
+}
+
+```
