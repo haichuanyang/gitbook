@@ -72,8 +72,6 @@ InstalledDir: /Library/Developer/CommandLineTools/usr/bin
 
 
 
-DP iS tricky hairy; old notes were not working as code template, can't be applied
-
 
 
 ```
@@ -255,14 +253,14 @@ next_permutation()
 prev_permutation()
 ```
 
-### quick exponentiation and multiplication
+### binary exponentiation and multiplication
 
 ```cpp
 #include <bits/stdc++.h>
 using namespace std;
 #define lowbit(S) ((S) & -(S))
 
-//Quick exponentiation
+//binary exponentiation
 //turns exponentiation to multiplication
 //same idea can turn multiplication to addition
 //get m^k%p in time O(logk)。
