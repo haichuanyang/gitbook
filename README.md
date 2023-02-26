@@ -1659,10 +1659,85 @@ vector<int> get_divisors(int x)
     return res;
 }
 
-//count of factors and sum of factors 约数个数和约数之和 —— 模板题 AcWing 870. 约数个数, AcWing 871. 约数之和
+//count of factors and sum of factors 约数个数和约数之和 —— 模板题 AcWing 870. 约数个数, 
+//AcWing 871. 约数之和
 //如果 N = p1^c1 * p2^c2 * ... *pk^ck
 //约数个数： (c1 + 1) * (c2 + 1) * ... * (ck + 1)
 //约数之和： (p1^0 + p1^1 + ... + p1^c1) * ... * (pk^0 + pk^1 + ... + pk^ck)
+
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long LL; 
+const int mod = 1e9 + 7;
+int main(){
+    int n,x;
+    LL ans = 1;
+    unordered_map<int,int> hashi;
+    cin >> n;
+    while(n--){
+        cin >> x;
+        for(int i = 2;i <= x/i; ++i){
+            while(x % i == 0){
+                x /= i;
+                hashi[i] ++;
+            }
+        }
+        if(x > 1) hashi[x] ++;
+    }
+    for(auto i : hashi) ans = ans*(i.second + 1) % mod;
+    cout << ans;
+    return 0;
+} //count of factors
+
+///sum of factors
+#include <iostream>
+#include <algorithm>
+#include <unordered_map>
+#include <vector>
+
+using namespace std;
+
+typedef long long LL;
+
+const int N = 110, mod = 1e9 + 7;
+
+int main()
+{
+    int n;
+    cin >> n;
+
+    unordered_map<int, int> primes;
+
+    while (n -- )
+    {
+        int x;
+        cin >> x;
+
+        for (int i = 2; i <= x / i; i ++ )
+            while (x % i == 0)
+            {
+                x /= i;
+                primes[i] ++ ;
+            }
+
+        if (x > 1) primes[x] ++ ;
+    }
+
+    LL res = 1;
+    for (auto p : primes)
+    {
+        LL a = p.first, b = p.second;
+        LL t = 1;
+        while (b -- ) t = (t * a + 1) % mod;
+        res = res * t % mod;
+    }
+
+    cout << res << endl;
+
+    return 0;
+} //sum of factors
+
+
 
 //Euclidean method 欧几里得算法 —— 模板题 AcWing 872. 最大公约数
 int gcd(int a, int b)
