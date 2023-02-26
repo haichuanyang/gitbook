@@ -1630,7 +1630,9 @@ void get_primes(int n)
 //linear sieve method for primes 线性筛法求素数 —— 模板题 AcWing 868. 筛质数
 int primes[N], cnt;     // primes[]存储所有素数
 bool st[N];         // st[x]存储x是否被筛掉
-
+//use the smallest prime factor to sieve only once;
+//any composite number will be sived out by its smallest prime factor, only once
+//thus this is linear 
 void linearprimes(int n)
 {
     for (int i = 2; i <= n; i ++ )
