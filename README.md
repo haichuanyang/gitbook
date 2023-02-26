@@ -1793,7 +1793,9 @@ int phi(int x)
 
     return res;
 }
-//sieve method for Euler phi 筛法求欧拉函数 —— 模板题 AcWing 874. 筛法求欧拉函数
+//sieve method for Euler phi 
+// based on linear prime sieving method
+//筛法求欧拉函数 —— 模板题 AcWing 874. 筛法求欧拉函数
 int primes[N], cnt;     // primes[]存储所有素数
 int euler[N];           // 存储每个数的欧拉函数
 bool st[N];         // st[x]存储x是否被筛掉
@@ -1822,16 +1824,16 @@ void get_eulers(int n)
         }
     }
 }
-//quick exponentiation 快速幂 —— 模板题 AcWing 875. 快速幂
+//binary exponentiation 快速幂 —— 模板题 AcWing 875. 快速幂
 //求 m^k mod p，时间复杂度 O(logk)。
 
-int qmi(int m, int k, int p)
+int bmi(int m, int k, int p)
 {
     int res = 1 % p, t = m;
     while (k)
     {
         if (k&1) res = res * t % p;
-        t = t * t % p;
+        t = t * t % p; //square the base; one digit higher
         k >>= 1;
     }
     return res;
