@@ -1740,7 +1740,7 @@ int main()
 
 
 //Euclidean method 欧几里得算法 —— 模板题 AcWing 872. 最大公约数
-int gcd(int a, int b)
+int gcd(int a, int b) //O(logn)
 {
     return b ? gcd(b, a % b) : a;
 }
