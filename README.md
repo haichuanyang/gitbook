@@ -1592,7 +1592,7 @@ for (int i = 1; i <= n1; i ++ )
 ```cpp
 
 //trial division method for primes 试除法判定质数 —— 模板题 AcWing 866. 试除法判定质数
-bool is_prime(int x)
+bool isprime(int x)
 {
     if (x < 2) return false;
     for (int i = 2; i <= x / i; i ++ )
@@ -1613,7 +1613,7 @@ void factori(int x)
     if (x > 1) cout << x << ' ' << 1 << endl;
     cout << endl;
 }
-//native sieve method for primes 朴素筛法求素数 —— 模板题 AcWing 868. 筛质数
+//native sieve method for primes 朴素筛法求素数 O(nlogn) —— 模板题 AcWing 868. 筛质数
 int primes[N], cnt;     // primes[]存储所有素数
 bool st[N];         // st[x]存储x是否被筛掉
 
@@ -1631,7 +1631,7 @@ void get_primes(int n)
 int primes[N], cnt;     // primes[]存储所有素数
 bool st[N];         // st[x]存储x是否被筛掉
 
-void get_primes(int n)
+void linearprimes(int n)
 {
     for (int i = 2; i <= n; i ++ )
     {
