@@ -1587,13 +1587,12 @@ for (int i = 1; i <= n1; i ++ )
 
 ### math
 
-```cpp
-
+<pre class="language-cpp"><code class="lang-cpp">
 //trial division method for primes 试除法判定质数 —— 模板题 AcWing 866. 试除法判定质数
 bool isprime(int x)
 {
-    if (x < 2) return false;
-    for (int i = 2; i <= x / i; i ++ )
+    if (x &#x3C; 2) return false;
+    for (int i = 2; i &#x3C;= x / i; i ++ )
         if (x % i == 0)
             return false;
     return true;
@@ -1601,15 +1600,15 @@ bool isprime(int x)
 //trial division method for factoring 试除法分解质因数 —— 模板题 AcWing 867. 分解质因数
 void factori(int x)
 {
-    for (int i = 2; i <= x / i; i ++ )
+    for (int i = 2; i &#x3C;= x / i; i ++ )
         if (x % i == 0)
         {
             int s = 0;
             while (x % i == 0) x /= i, s ++ ;
-            cout << i << ' ' << s << endl;
+            cout &#x3C;&#x3C; i &#x3C;&#x3C; ' ' &#x3C;&#x3C; s &#x3C;&#x3C; endl;
         }
-    if (x > 1) cout << x << ' ' << 1 << endl;
-    cout << endl;
+    if (x > 1) cout &#x3C;&#x3C; x &#x3C;&#x3C; ' ' &#x3C;&#x3C; 1 &#x3C;&#x3C; endl;
+    cout &#x3C;&#x3C; endl;
 }
 //native sieve method for primes 朴素筛法求素数 O(nlogn) —— 模板题 AcWing 868. 筛质数
 int primes[N], cnt;     // primes[]存储所有素数
@@ -1617,11 +1616,11 @@ bool st[N];         // st[x]存储x是否被筛掉
 
 void get_primes(int n)
 {
-    for (int i = 2; i <= n; i ++ )
+    for (int i = 2; i &#x3C;= n; i ++ )
     {
         if (st[i]) continue;
         primes[cnt ++ ] = i;
-        for (int j = i + i; j <= n; j += i)
+        for (int j = i + i; j &#x3C;= n; j += i)
             st[j] = true;
     }
 }
@@ -1633,10 +1632,10 @@ bool st[N];         // st[x]存储x是否被筛掉
 //thus this is linear 
 void linearprimes(int n)
 {
-    for (int i = 2; i <= n; i ++ )
+    for (int i = 2; i &#x3C;= n; i ++ )
     {
         if (!st[i]) primes[cnt ++ ] = i;
-        for (int j = 0; primes[j] <= n / i; j ++ )
+        for (int j = 0; primes[j] &#x3C;= n / i; j ++ )
         {
             st[primes[j] * i] = true;
             if (i % primes[j] == 0) break;
@@ -1644,10 +1643,10 @@ void linearprimes(int n)
     }
 }
 //trial division method for all factors 试除法求所有约数 —— 模板题 AcWing 869. 试除法求约数
-vector<int> get_divisors(int x)
+vector&#x3C;int> get_divisors(int x)
 {
-    vector<int> res;
-    for (int i = 1; i <= x / i; i ++ )
+    vector&#x3C;int> res;
+    for (int i = 1; i &#x3C;= x / i; i ++ )
         if (x % i == 0)
         {
             res.push_back(i);
@@ -1663,18 +1662,18 @@ vector<int> get_divisors(int x)
 //约数个数： (c1 + 1) * (c2 + 1) * ... * (ck + 1)
 //约数之和： (p1^0 + p1^1 + ... + p1^c1) * ... * (pk^0 + pk^1 + ... + pk^ck)
 
-#include <bits/stdc++.h>
+#include &#x3C;bits/stdc++.h>
 using namespace std;
 typedef long long LL; 
 const int mod = 1e9 + 7;
 int main(){
     int n,x;
     LL ans = 1;
-    unordered_map<int,int> hashi;
+    unordered_map&#x3C;int,int> hashi;
     cin >> n;
     while(n--){
         cin >> x;
-        for(int i = 2;i <= x/i; ++i){
+        for(int i = 2;i &#x3C;= x/i; ++i){
             while(x % i == 0){
                 x /= i;
                 hashi[i] ++;
@@ -1683,15 +1682,15 @@ int main(){
         if(x > 1) hashi[x] ++;
     }
     for(auto i : hashi) ans = ans*(i.second + 1) % mod;
-    cout << ans;
+    cout &#x3C;&#x3C; ans;
     return 0;
 } //count of factors
 
 ///sum of factors
-#include <iostream>
-#include <algorithm>
-#include <unordered_map>
-#include <vector>
+#include &#x3C;iostream>
+#include &#x3C;algorithm>
+#include &#x3C;unordered_map>
+#include &#x3C;vector>
 
 using namespace std;
 
@@ -1704,14 +1703,14 @@ int main()
     int n;
     cin >> n;
 
-    unordered_map<int, int> primes;
+    unordered_map&#x3C;int, int> primes;
 
     while (n -- )
     {
         int x;
         cin >> x;
 
-        for (int i = 2; i <= x / i; i ++ )
+        for (int i = 2; i &#x3C;= x / i; i ++ )
             while (x % i == 0)
             {
                 x /= i;
@@ -1730,7 +1729,7 @@ int main()
         res = res * t % mod;
     }
 
-    cout << res << endl;
+    cout &#x3C;&#x3C; res &#x3C;&#x3C; endl;
 
     return 0;
 } //sum of factors
@@ -1781,7 +1780,7 @@ sys.seterecursionlimit("your new limit")
 int phi(int x)
 {
     int res = x;
-    for (int i = 2; i <= x / i; i ++ )
+    for (int i = 2; i &#x3C;= x / i; i ++ )
         if (x % i == 0)
         {
             res = res / i * (i - 1);
@@ -1799,17 +1798,17 @@ int euler[N];           // 存储每个数的欧拉函数
 bool st[N];         // st[x]存储x是否被筛掉
 
 
-void get_eulers(int n)
-{
+<strong>void get_eulers(int n)
+</strong>{
     euler[1] = 1;
-    for (int i = 2; i <= n; i ++ )
+    for (int i = 2; i &#x3C;= n; i ++ )
     {
         if (!st[i])
         {
             primes[cnt ++ ] = i;
             euler[i] = i - 1;
         }
-        for (int j = 0; primes[j] <= n / i; j ++ )
+        for (int j = 0; primes[j] &#x3C;= n / i; j ++ )
         {
             int t = primes[j] * i;
             st[t] = true;
@@ -1830,7 +1829,7 @@ int bmi(int m, int k, int p)
     int res = 1 % p, t = m;
     while (k)
     {
-        if (k&1) res = res * t % p;
+        if (k&#x26;1) res = res * t % p;
         t = t * t % p; //square the base; one digit higher
         k >>= 1;
     }
@@ -1838,7 +1837,7 @@ int bmi(int m, int k, int p)
 }
 //extended Euclidean method 扩展欧几里得算法 —— 模板题 AcWing 877. 扩展欧几里得算法
 // 求x, y，使得ax + by = gcd(a, b)
-int exgcd(int a, int b, int &x, int &y)
+int exgcd(int a, int b, int &#x26;x, int &#x26;y)
 {
     if (!b)
     {
@@ -1854,18 +1853,18 @@ int exgcd(int a, int b, int &x, int &y)
 int gauss()
 {
     int c, r;
-    for (c = 0, r = 0; c < n; c ++ )
+    for (c = 0, r = 0; c &#x3C; n; c ++ )
     {
         int t = r;
-        for (int i = r; i < n; i ++ )   // 找到绝对值最大的行
+        for (int i = r; i &#x3C; n; i ++ )   // 找到绝对值最大的行
             if (fabs(a[i][c]) > fabs(a[t][c]))
                 t = i;
 
-        if (fabs(a[t][c]) < eps) continue;
+        if (fabs(a[t][c]) &#x3C; eps) continue;
 
-        for (int i = c; i <= n; i ++ ) swap(a[t][i], a[r][i]);      // 将绝对值最大的行换到最顶端
+        for (int i = c; i &#x3C;= n; i ++ ) swap(a[t][i], a[r][i]);      // 将绝对值最大的行换到最顶端
         for (int i = n; i >= c; i -- ) a[r][i] /= a[r][c];      // 将当前上的首位变成1
-        for (int i = r + 1; i < n; i ++ )       // 用当前行将下面所有的列消成0
+        for (int i = r + 1; i &#x3C; n; i ++ )       // 用当前行将下面所有的列消成0
             if (fabs(a[i][c]) > eps)
                 for (int j = n; j >= c; j -- )
                     a[i][j] -= a[r][j] * a[i][c];
@@ -1873,25 +1872,25 @@ int gauss()
         r ++ ;
     }
 
-    if (r < n)
+    if (r &#x3C; n)
     {
-        for (int i = r; i < n; i ++ )
+        for (int i = r; i &#x3C; n; i ++ )
             if (fabs(a[i][n]) > eps)
                 return 2; // 无解
         return 1; // 有无穷多组解
     }
 
     for (int i = n - 1; i >= 0; i -- )
-        for (int j = i + 1; j < n; j ++ )
-            a[i][n] -= a[i][j] * a[j][n];
+        for (int j = i + 1; j &#x3C; n; j ++ )
+            a[i][n] -= a[i][j] * a[j][n];   //move back up to solve h
 
     return 0; // 有唯一解
 }
 
 //1. combination number via recursion 递归法求组合数 —— 模板题 AcWing 885. 求组合数 I
 // c[a][b]="a choose b"
-for (int i = 0; i < N; i ++ )
-    for (int j = 0; j <= i; j ++ )
+for (int i = 0; i &#x3C; N; i ++ )
+    for (int j = 0; j &#x3C;= i; j ++ )
         if (!j) c[i][j] = 1;
         else c[i][j] = (c[i - 1][j] + c[i - 1][j - 1]) % mod;
 
@@ -1904,7 +1903,7 @@ int qmi(int a, int k, int p)    // 快速幂模板
     int res = 1;
     while (k)
     {
-        if (k & 1) res = (LL)res * a % p;
+        if (k &#x26; 1) res = (LL)res * a % p;
         a = (LL)a * a % p;
         k >>= 1;
     }
@@ -1913,14 +1912,14 @@ int qmi(int a, int k, int p)    // 快速幂模板
 
 // 预处理阶乘的余数和阶乘逆元的余数
 fact[0] = infact[0] = 1;
-for (int i = 1; i < N; i ++ )
+for (int i = 1; i &#x3C; N; i ++ )
 {
     fact[i] = (LL)fact[i - 1] * i % mod;
     infact[i] = (LL)infact[i - 1] * qmi(i, mod - 2, mod) % mod;
 }
 
 //3. Lucas定理 —— 模板题 AcWing 887. 求组合数 III
-//若p是质数，则对于任意整数 1 <= m <= n，有：
+//若p是质数，则对于任意整数 1 &#x3C;= m &#x3C;= n，有：
 //    C(n, m) = C(n % p, m % p) * C(n / p, m / p) (mod p)
 
 int qmi(int a, int k)       // 快速幂模板
@@ -1928,7 +1927,7 @@ int qmi(int a, int k)       // 快速幂模板
     int res = 1;
     while (k)
     {
-        if (k & 1) res = (LL)res * a % p;
+        if (k &#x26; 1) res = (LL)res * a % p;
         a = (LL)a * a % p;
         k >>= 1;
     }
@@ -1939,7 +1938,7 @@ int qmi(int a, int k)       // 快速幂模板
 int C(int a, int b)     // 通过定理求组合数C(a, b)
 {
     int res = 1;
-    for (int i = 1, j = a; i <= b; i ++, j -- )
+    for (int i = 1, j = a; i &#x3C;= b; i ++, j -- )
     {
         res = (LL)res * j % p;
         res = (LL)res * qmi(i, p - 2) % p;
@@ -1951,7 +1950,7 @@ int C(int a, int b)     // 通过定理求组合数C(a, b)
 //lucas method does NOT use Catalan at all!
 int lucas(LL a, LL b)
 {
-    if (a < p && b < p) return C(a, b);
+    if (a &#x3C; p &#x26;&#x26; b &#x3C; p) return C(a, b);
     return (LL)C(a % p, b % p) * lucas(a / p, b / p) % p;
 }
 
@@ -1960,7 +1959,8 @@ int lucas(LL a, LL b)
 //分解质因数法求组合数 —— 模板题 AcWing 888. 求组合数 IV
 //当我们需要求出组合数的真实值，而非对某个数的余数时，分解质因数的方式比较好用：
 //    1. 筛法求出范围内的所有质数
-//    2. 通过 C(a, b) = a! / b! / (a - b)! 这个公式求出每个质因子的次数。 n! 中p的次数是 n / p + n / p^2 + n / p^3 + ...
+//    2. 通过 C(a, b) = a! / b! / (a - b)! 这个公式求出每个质因子的次数。 
+// n! 中p的次数是 n / p + n / p^2 + n / p^3 + ...
 //    3. 用高精度乘法将所有质因子相乘
 
 int primes[N], cnt;     // 存储所有质数
@@ -1970,10 +1970,10 @@ bool st[N];     // 存储每个数是否已被筛掉
 
 void get_primes(int n)      // 线性筛法求素数
 {
-    for (int i = 2; i <= n; i ++ )
+    for (int i = 2; i &#x3C;= n; i ++ )
     {
         if (!st[i]) primes[cnt ++ ] = i;
-        for (int j = 0; primes[j] <= n / i; j ++ )
+        for (int j = 0; primes[j] &#x3C;= n / i; j ++ )
         {
             st[primes[j] * i] = true;
             if (i % primes[j] == 0) break;
@@ -1994,11 +1994,11 @@ int get(int n, int p)       // 求n！中的次数
 }
 
 
-vector<int> mul(vector<int> a, int b)       // 高精度乘低精度模板
+vector&#x3C;int> mul(vector&#x3C;int> a, int b)       // 高精度乘低精度模板
 {
-    vector<int> c;
+    vector&#x3C;int> c;
     int t = 0;
-    for (int i = 0; i < a.size(); i ++ )
+    for (int i = 0; i &#x3C; a.size(); i ++ )
     {
         t += a[i] * b;
         c.push_back(t % 10);
@@ -2016,22 +2016,23 @@ vector<int> mul(vector<int> a, int b)       // 高精度乘低精度模板
 
 get_primes(a);  // 预处理范围内的所有质数
 
-for (int i = 0; i < cnt; i ++ )     // 求每个质因数的次数
+for (int i = 0; i &#x3C; cnt; i ++ )     // 求每个质因数的次数
 {
     int p = primes[i];
     sum[i] = get(a, p) - get(b, p) - get(a - b, p);
 }
 
-vector<int> res;
+vector&#x3C;int> res;
 res.push_back(1);
 
-for (int i = 0; i < cnt; i ++ )     // 用高精度乘法将所有质因子相乘
-    for (int j = 0; j < sum[i]; j ++ )
+for (int i = 0; i &#x3C; cnt; i ++ )     // 用高精度乘法将所有质因子相乘
+    for (int j = 0; j &#x3C; sum[i]; j ++ )
         res = mul(res, primes[i]);
 
 //Catalan numbers
 卡特兰数 —— 模板题 AcWing 889. 满足条件的01序列
-给定n个0和n个1，它们按照某种顺序排成长度为2n的序列，满足任意前缀中0的个数都不少于1的个数的序列的数量为： 
+给定n个0和n个1，它们按照某种顺序排成长度为2n的序列，
+满足任意前缀中0的个数都不少于1的个数的序列的数量为： 
 Cat(n) = C(2n, n) / (n + 1)
 
 //NIM game - basic game theory
@@ -2076,7 +2077,7 @@ SG(G) = SG(G1) ^ SG(G2) ^ … ^ SG(Gm)
 有向图游戏的某个局面必败，当且仅当该局面对应节点的SG函数值等于0
 
 
-```
+</code></pre>
 
 ### probably not needed - arbitrary precision, 2 split, merge sort, quick sort&#x20;
 
