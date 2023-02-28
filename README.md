@@ -2035,6 +2035,41 @@ for (int i = 0; i &#x3C; cnt; i ++ )     // 用高精度乘法将所有质因子
 满足任意前缀中0的个数都不少于1的个数的序列的数量为： 
 Cat(n) = C(2n, n) / (n + 1)
 
+#include &#x3C;iostream>
+using namespace std
+typedef long long LL;
+const int mod = 1e9 + 7;
+
+int qmi(int a, int k, int p) {
+    int res = 1 % p;
+    while (k) {
+        if (k &#x26; 1) res = (LL)res * a % p;
+        a = (LL)a * a % p;
+        k >>= 1;
+    }
+    return res;
+}
+
+int main() {
+
+    int n;
+    cin >> n;
+
+    int a = 2 * n, b = n;
+    int res = 1;
+
+    for (int i = a; i > a - b; i--) res = (LL)res * i % mod;//C top
+    for (int i = 1; i &#x3C;= b; i++) res = (LL)res * qmi(i, mod - 2, mod) % mod;
+    //C bottom, divide change to inverse element
+
+    res = (LL)res * qmi(n + 1, mod - 2, mod) % mod; //divide (n+1)
+
+    cout &#x3C;&#x3C; res &#x3C;&#x3C; endl;
+
+    return 0;
+}
+
+
 //NIM game - basic game theory
 NIM游戏 —— 模板题 AcWing 891. Nim游戏
 给定N堆物品，第i堆物品有Ai个。两名玩家轮流行动，每次可以任选一堆，取走任意多个物品，可把一堆取光，但不能不取。取走最后一件物品者获胜。两人都采取最优策略，问先手是否必胜。
