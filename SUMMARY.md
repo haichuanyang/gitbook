@@ -21,7 +21,7 @@
 * [linear DP](linear-dp/README.md)
   * [knapsack](linear-dp/program/README.md)
     * [multi knapsack III - monotonic queue](linear-dp/program/multi-knapsack-iii-monotonic-queue.md)
-    * [01 and complete knapsack - sth wrong; can't use](linear-dp/program/01-knapsack.md)
+    * [01 and complete knapsack](linear-dp/program/01-knapsack.md)
   * [integer partition](linear-dp/integer-partition.md)
   * [digit count 数位 DP from advanced](linear-dp/digit-count-shu-wei-dp.md)
   * [1x2 block filling](linear-dp/grid-block-filling/README.md)
